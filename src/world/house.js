@@ -14,6 +14,7 @@
 // Дом — свой слой, как изнанка: своя карта (точки дома 0..HW × 0..HH), свой ход,
 // свои вещи с меню. Рисует render/house.js.
 // ═══════════════════════════════════════
+import { buildMailbox } from './folk.js';
 import { STREETS } from './town.js';
 
 export const HW = 232, HH = 122;                       // дом целиком
@@ -190,6 +191,7 @@ export function buildHouse(locations) {
   home = { id: 'wake_house', name: 'Дом', zone: 'quarter', x, y: gy - HOUSE_H, w: HOUSE_W, h: HOUSE_H, solid: true,
     look: OUT_LOOK, drawSelf: drawHouse, useAction: 'house_enter', useLabel: '<i>⌂</i>ВОЙТИ' };
   locations.push(home);
+  buildMailbox(locations, home);                 // почтовый ящик: извещение о неявке (народ мира, world/folk.js)
   return home;
 }
 export const wakeHouse = () => home;

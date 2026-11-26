@@ -5504,6 +5504,70 @@ setCtx(ctx);
   });
 }
 
+// ═══ НАРОД МИРА, ВОЛНА I (world/folk.js; пул FOLK — content/world_folk.js) ═══
+{
+  const FK = await imp('world/folk.js');
+  const WF = await imp('content/world_folk.js');
+  const LC3 = await imp('world/locations.js');
+  const UA = await imp('world/useActions.js');
+  const HS = await imp('world/house.js');
+  const DSC_F = await imp('world/disc.js');
+  const WH = await imp('world/whisper.js');
+  test('народ мира: голоса стоят у табличек своих клеток, слова — по пулу (с правкой приёмки); подшивка канцелярии — все десять форм; ящик у дома — извещение', () => {
+    eq(FK.folk.voices.length, FK.VOICES.length, 'не все голоса нашли табличку: ' + FK.VOICES.filter(V => !FK.folk.voices.some(v => v.name === V.name)).map(V => V.name).join(', '));
+    for (const v of FK.folk.voices) {
+      const f = WF.FOLK.find(q => q.name.startsWith(v.name));
+      assert(f && f.type === 'голос', `${v.name}: не голос пула`);
+      if (!v.fix) eq(v.line, f.line.trim(), `${v.name}: слова не по пулу`);
+      if (v.ring) assert(v.at.streetSeg === v.ring && (v.at.streetSide || 'south') === v.side, `${v.name}: не своя клетка (${v.at.name})`);
+      assert(v.parts.length >= 1 && v.parts.join(' ') === v.line.replace(/\s+/g, ' '), `${v.name}: фразы потерялись`);
+    }
+    assert(/В красный полдень не показываю ничего/.test(FK.folk.voices.find(v => v.name === 'тень обелиска').line), 'тень обелиска: правка v3.5');
+    const office = LC3.locations.find(l => l.id === 'office');
+    eq(office.useAction, 'office_files', 'у канцелярии нет подшивки');
+    const T = UA.useTexts.office_files.text;
+    for (const f of WF.FOLK.filter(q => q.type === 'форма' && !/снегопад|неявке/.test(q.name))) assert(T.includes(f.line.trim()), `в подшивке нет: ${f.name}`);
+    const loc = [...LC3.locations];
+    const home = HS.buildHouse(loc), box = loc.find(l => l.id === 'house_mailbox');
+    assert(home && box && box.x >= home.x + home.w, 'ящика у дома нет');
+    assert(box.look.includes('Приглашение: не направлялось'), 'в ящике не то');
+  });
+  test('народ мира, волна II: вещи пула встали в свои клетки, у каждой осмотр по сцене и действие; барабан выдаёт чужие просьбы по одной', () => {
+    const D3 = DSC_F;
+    for (const T of FK.THINGS) {
+      const l = LC3.locations.find(q => q.id === T.id);
+      assert(l, `${T.name}: не встала`);
+      eq(D3.ringAt(l.x + l.w / 2, l.y + l.h), T.ring, `${T.name}: не своё кольцо`);
+      assert(WF.FOLK.some(f => f.name.startsWith(T.name)), `${T.name}: нет в пуле`);
+      assert(l.look && l.look.length > 40, `${T.name}: осмотр`);
+      if (T.use) assert(UA.useTexts[T.id] && UA.useTexts[T.id].title && UA.useTexts[T.id].text, `${T.name}: действие`);
+      l.drawSelf(fakeCtx(), l, 0);
+    }
+    const a = UA.useTexts.folk_drum.text, b = UA.useTexts.folk_drum.text;
+    assert(a !== b && /пусть/.test(a), 'барабан: одна и та же просьба');
+    assert(/предъявителю\. в чём — устанавливается/.test(UA.useTexts.office_files.text), 'машинка: формула судьи');
+  });
+  test('народ мира: постоял у таблички — голос говорит по фразе; ушёл — замолк; снова — не сразу; ночные — только ночью', () => {
+    FK._resetFolk(); WH.clear();
+    const v = FK.folk.voices.find(q => q.name === 'соляные сады'), a = v.at;
+    const pl = { x: a.x + a.w / 2 - 6, y: a.y + a.h - 23 + 10, moving: false };
+    let got = null;
+    for (let i = 0; i < 120 && !got; i++) got = FK.stepFolk(pl, 1000 + i);
+    assert(got && got.name === 'соляные сады', 'голос не заговорил');
+    FK.stepFolk(pl, 2000);
+    eq(WH.whisperText(), v.parts[0], 'первая фраза не та');
+    WH.clear();
+    FK.stepFolk({ ...pl, x: pl.x + 400 }, 2001);
+    assert(!FK.folk.cur, 'ушёл — а голос всё говорит');
+    let again = null;
+    for (let i = 0; i < 200 && !again; i++) again = FK.stepFolk(pl, 3000 + i);
+    assert(!again, 'снова сразу');
+    const night = FK.folk.voices.find(q => q.night);
+    assert(night, 'нет ночного голоса');
+    FK._resetFolk(); WH.clear();
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

@@ -154,6 +154,7 @@ import { climb, startClimb, stepClimb, stopClimb, drawClimb, climbDepth } from '
 import { drawMossDream } from './render/mindfx.js';
 import { stepDispatch, skipLine, noteTalkedOut, noteBrake, noteLie, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
 import { stepThread, drawThreadNote, saveThread, loadThread, noteReadThrough, incomingNotes, thread as threadState, STAY as THREAD_STAY } from './world/thread.js';
+import { stepFolk, saveFolk, loadFolk } from './world/folk.js';
 import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
 import { SCENES } from './content/dispatch_scenes.js';
 
@@ -296,7 +297,8 @@ if (savedData) {
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
   loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода, пулы (world/stage.js)
-  loadThread(savedData.thread);                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
+  loadThread(savedData.thread);
+  loadFolk(savedData.folk);                                   // народ мира: сказанное однажды (ночной у врат)                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
   loadDispatch(savedData.dispatch);                          // канал машиниста: сыгранные сцены «Ничего» и «Заочно»
   loadHeard(savedData.heard);                                // что странник носит при себе — мысли на сцене (world/heard.js)
   // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
@@ -330,6 +332,7 @@ function saveData() {
   stage: saveStage(),
   dispatch: saveDispatch(),
   thread: saveThread(),
+  folk: saveFolk(),
   heard: saveHeard(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
@@ -2122,6 +2125,8 @@ function updateWorldSystems() {
     const ev = stepThread(player, flags.walked, dispatchPlaying() || riding() || isInSettlement(player.x + 6, player.y + 23));
     if (ev) { showLore(ev.text); playPickup(); pickupSparkle(ev.x, ev.y); saveNow(); }
   }
+  // народ мира: постоял у таблички — голос говорит по фразе (world/folk.js)
+  if (!redNoon.active && !dispatchPlaying()) { const v = stepFolk(player, t); if (v && v.once) saveNow(); }
 
   // тихое подаёт голос: вещь в тени рядом — шорох или скрип с её стороны (world/quietSound.js)
   if (_t % 12 === 0) { stepQuietVoices(); stepNoonPaper(); }

@@ -89,13 +89,17 @@ await test('дом: свет — огонёк у сердца, окно и ще�
 await test('дом снаружи: угол главной улицы квартала и улицы у церкви, фасадом на главную, в квартале', () => {
   const L = [];
   const h = H.buildHouse(L);
-  eq(L.length, 1); eq(h.id, 'wake_house'); eq(h.useAction, 'house_enter');
+  eq(L.length, 2); eq(h.id, 'wake_house'); eq(h.useAction, 'house_enter');
+  eq(L[1].id, 'house_mailbox', 'у дома — почтовый ящик (народ мира: извещение о неявке)');
   const church = STREETS.find(s => s[0] === 'road:q-church')[1], cx = church.reduce((s, p) => s + p[0], 0) / church.length;
   assert(h.x > cx && h.x - cx < 30, 'к востоку от улицы у церкви, рядом');
   const d = H.doorOutside();
   assert(Math.abs(d.y + 23 - oldY(3990)) < 30, 'дверь — к главной улице');   // главная улица квартала — у y 3990 прежнего поля
   assert(inQuarter(h.x + h.w / 2, h.y + h.h / 2), 'в квартале');
   for (const l of locations) if (l.id !== 'wake_house') assert(!(h.x < l.x + l.w && h.x + h.w > l.x && h.y < l.y + l.h && h.y + h.h > l.y), 'не налезает на ' + l.id);
+  const m = L[1];
+  for (const l of locations) if (l.id !== 'house_mailbox' && l.id !== 'wake_house') assert(!(m.x < l.x + l.w && m.x + m.w > l.x && m.y < l.y + l.h && m.y + m.h > l.y), 'ящик налезает на ' + l.id);
+  m.drawSelf(fakeCtx(), m, 0);
   h.drawSelf(fakeCtx(), h, 0);
 });
 await test('дом: кадр ночью и днём, с ботинками и без — без ошибок; герой по глубине', () => {

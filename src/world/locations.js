@@ -260,6 +260,9 @@ import { isInSettlement } from './physics.js';
 locations.push(...buildDispatchPost(locations, isInSettlement));
 locations.push(...buildForkStone(locations));                   // камень на развилке — «Развилка»
 buildActBoards(locations);                     // акты — у южной тропы, на кольцах 6–9 (мягкая нить «куда дальше»): последними, чужих якорей не занимают
+// народ мира (пул FOLK, волна I): голоса — у табличек своих клеток, подшивка — в канцелярии (world/folk.js)
+import { buildFolk } from './folk.js';
+buildFolk(locations);
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)
