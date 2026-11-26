@@ -388,6 +388,8 @@ const FIRE = locations.find(l => l.id === 'campfire');   // искры над к
 lighting.clear();
 // Player lantern — follows player
 lighting.add({ x: CORE.x, y: CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
+// ночное зрение (ROADMAP Г2): вокруг странника — мягкий ореол цвета кости, без середины; растёт с темнотой
+lighting.add({ x: CORE.x, y: CORE.y, r: 150, color: [217, 207, 184], flicker: 0, soft: true, intensity: 0 });
 // Location lights
 for (const loc of locations) {
   if (!loc.light || loc.quiet) continue;                 // глубина II — без своего света
@@ -668,7 +670,7 @@ function litAt(x, y) {
   const S = lighting.sources;
   for (let i = 1; i < S.length; i++) {
     const L = S[i], R = L.r * 1.2;
-    if (!shines(L)) continue;
+    if (!shines(L) || L.soft) continue;                  // ночное зрение — не свет: шёпоты у него не просыпаются
     if (Math.abs(L.x - x) < R && Math.abs(L.y - y) < R && Math.hypot(L.x - x, L.y - y) < R) return true;
   }
   return false;
@@ -840,9 +842,16 @@ function render() {
   setCtx(worldCtx);
 
   // ── LIGHT: additive lighting ──
+  // темнота 0 днём … 1 глубокой ночью: ночью огонёк светит шире (55 → 90), вокруг — ночное зрение (Г2)
+  const dark = Math.max(0, Math.min(1, (0.82 - skyAt(phaseAt(t)).light) / 0.42));
   if (lighting.sources[0]) {
     lighting.sources[0].x = player.x + 7;                    // огонёк — на оси фигуры (sprites/wardrobe.js)
     lighting.sources[0].y = player.y + 10;
+    lighting.sources[0].r = 55 + 35 * dark;
+  }
+  if (lighting.sources[1] && lighting.sources[1].soft) {
+    lighting.sources[1].x = player.x + 7; lighting.sources[1].y = player.y + 16;
+    lighting.sources[1].intensity = 0.9 * dark;
   }
   // Readability floor: night was 0.28 (28% brightness through the
   // multiply layer) — dramatic on a desk, near-black on a phone in

@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 449 887. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 449 887. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 451 258. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 451 258. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -916,7 +916,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='c7ce452 · 2026-11-26';console.log('[оттиск]', 'c7ce452 · 2026-11-26');
+<script>window.ARDET_BUILD='693b6a2 · 2026-11-26';console.log('[оттиск]', '693b6a2 · 2026-11-26');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -1680,6 +1680,12 @@ System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], 
                             : L.flicker ? (1 - L.flicker * 0.5 + Math.sin(time_js_1.t * 0.07 + L.x * 0.1) * L.flicker * 0.5) : 1;
                         const intensity = (L.intensity || 1) * flick;
                         const [r, g, b] = L.color || [255, 200, 100];
+                        // ночное зрение (soft): только широкий мягкий ореол — без яркой середины и искр
+                        if (L.soft) {
+                            drawRadial(ctx, sx, sy, L.r * 1.5, r, g, b, 0.34 * intensity);
+                            drawRadial(ctx, sx, sy, L.r * 0.8, r, g, b, 0.22 * intensity);
+                            continue;
+                        }
                         // Layer 1: distant ambient (very large, very faint)
                         drawRadial(ctx, sx, sy, L.r * 2.5, r, g, b, 0.03 * intensity);
                         // Layer 2: wide halo (soft glow)
@@ -1709,8 +1715,8 @@ System.register("render/lighting", ["render/scaler", "core/time", "world/sky"], 
                     if (this.particles.length < this.maxCount && time_js_1.t % 4 === 0) {
                         // Pick a random visible light source
                         const visible = lightSources.filter(L => {
-                            if (!shines(L))
-                                return false;
+                            if (!shines(L) || L.soft)
+                                return false; // у ночного зрения пылинок нет
                             const sx = L.x - cam.x, sy = L.y - cam.y;
                             return sx > -L.r && sx < vw + L.r && sy > -L.r && sy < vh + L.r;
                         });
@@ -76955,8 +76961,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const S = lighting_js_1.lighting.sources;
         for (let i = 1; i < S.length; i++) {
             const L = S[i], R = L.r * 1.2;
-            if (!lighting_js_1.shines(L))
-                continue;
+            if (!lighting_js_1.shines(L) || L.soft)
+                continue; // ночное зрение — не свет: шёпоты у него не просыпаются
             if (Math.abs(L.x - x) < R && Math.abs(L.y - y) < R && Math.hypot(L.x - x, L.y - y) < R)
                 return true;
         }
@@ -77176,9 +77182,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         ink_js_2.ink.drawGroup((c, loc) => { context_js_20.setCtx(c); drawLocation(c, loc); }, camX, camY);
         context_js_20.setCtx(worldCtx);
         // ── LIGHT: additive lighting ──
+        // темнота 0 днём … 1 глубокой ночью: ночью огонёк светит шире (55 → 90), вокруг — ночное зрение (Г2)
+        const dark = Math.max(0, Math.min(1, (0.82 - sky_js_18.skyAt(sky_js_18.phaseAt(time_js_52.t)).light) / 0.42));
         if (lighting_js_1.lighting.sources[0]) {
             lighting_js_1.lighting.sources[0].x = player.x + 7; // огонёк — на оси фигуры (sprites/wardrobe.js)
             lighting_js_1.lighting.sources[0].y = player.y + 10;
+            lighting_js_1.lighting.sources[0].r = 55 + 35 * dark;
+        }
+        if (lighting_js_1.lighting.sources[1] && lighting_js_1.lighting.sources[1].soft) {
+            lighting_js_1.lighting.sources[1].x = player.x + 7;
+            lighting_js_1.lighting.sources[1].y = player.y + 16;
+            lighting_js_1.lighting.sources[1].intensity = 0.9 * dark;
         }
         // Readability floor: night was 0.28 (28% brightness through the
         // multiply layer) — dramatic on a desk, near-black on a phone in
@@ -79782,6 +79796,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
             lighting_js_1.lighting.add({ x: disc_js_58.CORE.x, y: disc_js_58.CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            // ночное зрение (ROADMAP Г2): вокруг странника — мягкий ореол цвета кости, без середины; растёт с темнотой
+            lighting_js_1.lighting.add({ x: disc_js_58.CORE.x, y: disc_js_58.CORE.y, r: 150, color: [217, 207, 184], flicker: 0, soft: true, intensity: 0 });
             // Location lights
             for (const loc of locations_js_6.locations) {
                 if (!loc.light || loc.quiet)

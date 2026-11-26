@@ -51,6 +51,9 @@ export const lighting = {
       const intensity = (L.intensity || 1) * flick;
       const [r, g, b] = L.color || [255, 200, 100];
 
+      // ночное зрение (soft): только широкий мягкий ореол — без яркой середины и искр
+      if (L.soft) { drawRadial(ctx, sx, sy, L.r * 1.5, r, g, b, 0.34 * intensity); drawRadial(ctx, sx, sy, L.r * 0.8, r, g, b, 0.22 * intensity); continue; }
+
       // Layer 1: distant ambient (very large, very faint)
       drawRadial(ctx, sx, sy, L.r * 2.5, r, g, b, 0.03 * intensity);
 
@@ -87,7 +90,7 @@ export const lightParticles = {
     if (this.particles.length < this.maxCount && t % 4 === 0) {
       // Pick a random visible light source
       const visible = lightSources.filter(L => {
-        if (!shines(L)) return false;
+        if (!shines(L) || L.soft) return false;          // у ночного зрения пылинок нет
         const sx = L.x - cam.x, sy = L.y - cam.y;
         return sx > -L.r && sx < vw + L.r && sy > -L.r && sy < vh + L.r;
       });
