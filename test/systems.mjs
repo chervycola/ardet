@@ -5568,6 +5568,49 @@ setCtx(ctx);
   });
 }
 
+// ═══ КОСТЁР ШУТА У КОЛЬЦА ОГНЯ (world/jesterFire.js; WORLD_WEAVE §3½, DRAMATURGY IV) ═══
+{
+  const JFm = await imp('world/jesterFire.js');
+  const DJ = await imp('world/disc.js');
+  const LJ = await imp('world/locations.js');
+  const DLJ = await imp('content/dialogues.js');
+  const NMJ = await imp('world/names.js');
+  test('костёр Шута: у южной тропы, у кромки огня; W с колодой; разговор — свой', () => {
+    const l = LJ.locations.find(q => q.id === 'jester_fire');
+    assert(l && l.npc === 'jester' && JFm.FIRE, 'костра нет');
+    const d = DJ.warpedDist(JFm.FIRE.x, JFm.FIRE.y);
+    assert(d > DJ.RINGS_D - 20 && d < DJ.RINGS_D + 30, `не у кромки огня: ${Math.round(d)}`);
+    assert(DLJ.dialogues.jester_fire && DLJ.dialogues.jester_fire.length >= 2, 'разговора нет');
+    for (const tx of DLJ.dialogues.jester_fire) { assert(tx.split('\n').length <= 5, 'реплика длиннее пяти строк'); assert(!/пропуст|пройти|пусти/i.test(tx), 'о проходе — ни слова'); }
+  });
+  test('костёр Шута: огонь держит край наружу, обратно — всегда; попросил — отказ на вечер; сыграл, не попросив, — огонь лёг у дороги; «Не смей» — однажды', () => {
+    JFm._resetJesterFire();
+    const T = 1000;
+    const far = JFm.roadAt(DJ.RINGS_D + DJ.FIRE_W / 2), road = { x: far.x, y: far.y };
+    assert(JFm.fireBlocked(road.x, road.y, T), 'огонь у дороги не держит');
+    const before = JFm.roadAt(DJ.RINGS_D - 40);
+    assert(!JFm.fireBlocked(before.x, before.y, T), 'держит до огня');
+    JFm.JF.outside = true; assert(!JFm.fireBlocked(road.x, road.y, T), 'снаружи не пускает обратно'); JFm.JF.outside = false;
+    assert(/нельзя/.test(JFm.ask(T)) && /сказано/.test(JFm.ask(T)), 'отказ на вечер');
+    JFm.deal(T); const a = JFm.move(T);
+    assert(/Опять выиграл\. Не представляю, как у тебя это получается\./.test(a) && !/ложится/.test(a), 'попросил — а огонь лёг');
+    assert(JFm.fireBlocked(road.x, road.y, T), 'проход открыт после просьбы');
+    const T2 = T + 43200;                                         // следующие сутки
+    JFm.deal(T2); const y1 = JFm.yieldCard(T2);
+    assert(/Не смей\. Это — моя работа\./.test(y1) && /ложится/.test(y1), 'поддался: «Не смей» и огонь лёг');
+    assert(!JFm.fireBlocked(road.x, road.y, T2), 'проход у дороги не открылся');
+    assert(JFm.fireBlocked(road.x + 200, road.y, T2), 'открылся не только у дороги');
+    JFm.deal(T2); const y2 = JFm.yieldCard(T2);
+    assert(!/Не смей/.test(y2) && /Хватает/.test(y2), '«Не смей» — дважды');
+    assert(JFm.fireBlocked(road.x, road.y, T2 + 43200), 'проход не закрылся к следующим суткам');
+    const saved = JSON.parse(JSON.stringify(JFm.saveJesterFire()));
+    JFm._resetJesterFire(); JFm.loadJesterFire(saved);
+    assert(JFm.JF.caught && JFm.JF.games === 3 && !JFm.fireBlocked(road.x, road.y, T2), 'не сохранилось');
+    assert(/^Сбрасываешь туза\. (Он|W) смотрит/.test(JFm.yieldCard(T2)), 'имя до знакомства');
+    JFm._resetJesterFire();
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

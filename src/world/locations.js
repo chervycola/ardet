@@ -263,6 +263,9 @@ buildActBoards(locations);                     // акты — у южной т�
 // народ мира (пул FOLK, волна I): голоса — у табличек своих клеток, подшивка — в канцелярии (world/folk.js)
 import { buildFolk } from './folk.js';
 buildFolk(locations);
+// костёр Шута у кольца огня (world/jesterFire.js): южная тропа, у внутренней кромки огня
+import { buildJesterFire } from './jesterFire.js';
+buildJesterFire(locations);
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)

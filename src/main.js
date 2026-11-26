@@ -84,7 +84,7 @@ import {
   getDiscovered as getDiscoveredGates,
   loadDiscovered as loadDiscoveredGates,
 } from './ui/worldmap.js';
-import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak, playCough, setPurr } from './audio/audio.js';
+import { initAudio, resumeAudio, startAmbient, playPickup, playClick, playDistantSound, playHeart, playMossGrow, playTick, playBlow, playInhale, playCrackle, playPour, playMurmur, playSigh, playRustle, playCreak, playCough, setPurr, playTone } from './audio/audio.js';
 import { beyond, stepPozemka, drawBeyondWorld, clearings as beyondClearings, drawHorizon } from './world/beyond.js';
 import { initEditor } from './ui/editor.js';
 import { drawEggObject } from './sprites/eggObjects.js';
@@ -104,7 +104,7 @@ import { update as updateEdges, draw as drawEdges, drawHud as drawEdgeHud, slowF
 import { updateZone, getZone } from './audio/zoneAmbient.js';
 import { updateJester, drawJesterWandering, drawJesterGraffiti, getGraffiti, setGraffiti } from './world/wandering.js';
 import { updateProximity, draw as drawInscriptions, setRevealHook } from './world/inscriptions.js';
-import { update as updateIdle, draw as drawIdle, announce, setSeen as setIdleSeen } from './world/idle.js';
+import { update as updateIdle, draw as drawIdle, announce, setSeen as setIdleSeen, sayUnderfoot } from './world/idle.js';
 import { stage, stepStage, standStage, stageAlt, stageView, saveStage, loadStage, placeStage, enterStage, exitStage, quadSteps, QUAD2_FROM, STAGE_C, DOOR as STAGE_DOOR, DW, DH, SEAT_D,
   planVisit, takeBackdrops, noteLookedPlace, cuesAt, faceHall, stepGaze, hearHall, REMARKS } from './world/stage.js';
 import { drawStageWorld, stageLights, STAGE_AMBIENT, hallSeatPan, lastAppeared } from './render/stage.js';
@@ -155,6 +155,8 @@ import { drawMossDream } from './render/mindfx.js';
 import { stepDispatch, skipLine, noteTalkedOut, noteBrake, noteLie, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
 import { stepThread, drawThreadNote, saveThread, loadThread, noteReadThrough, incomingNotes, thread as threadState, STAY as THREAD_STAY } from './world/thread.js';
 import { stepFolk, saveFolk, loadFolk } from './world/folk.js';
+import { FIRE as JFIRE, fireBlocked, stepJesterFire, deal as jfDeal, move as jfMove, yieldCard as jfYield, ask as jfAsk, drawGateFire, capOff as jfCapOff, saveJesterFire, loadJesterFire } from './world/jesterFire.js';
+import { setCapOff } from './sprites/npcs/jester.js';
 import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
 import { SCENES } from './content/dispatch_scenes.js';
 
@@ -178,7 +180,9 @@ buildArteries([
   .map(l => ({ x0: l.x + 1, x1: l.x + l.w - 1, y: l.y + l.h })));   // подножия у тропы: дорога их обходит (плавучее — не подножие)
 buildTown();                                   // городок по канону: высохшее русло через посёлок, мост над ним
 setReliefCarve((x, y) => riverCarve(x, y) + landCarve(x, y));   // река промыла себе долину; горы, каньоны и чаша пруда (world/landforms.js)
-setTerrainBlock(deepAt);                       // в глубокую воду озера не войти — только лодкой
+// в глубокую воду озера не войти — только лодкой; наружу через огонь края — только у костра Шута, когда огонь лёг
+setTerrainBlock((x, y) => deepAt(x, y) || fireBlocked(x, y, t));
+setCapOff(jfCapOff);                            // ночью у огня W греет колпак — на голове его нет
 setReliefFlats(archGroundRects());             // под дворами и водой земля выровнена
 buildArteryProps();                            // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
 buildFields(archGroundRects());                // поля у дворов и вдоль дорог — бороздами в землю
@@ -298,7 +302,8 @@ if (savedData) {
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
   loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода, пулы (world/stage.js)
   loadThread(savedData.thread);
-  loadFolk(savedData.folk);                                   // народ мира: сказанное однажды (ночной у врат)                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
+  loadFolk(savedData.folk);
+  loadJesterFire(savedData.jesterFire);                       // костёр Шута: отказ и проход на вечер, партии, «Не смей» — однажды                                   // народ мира: сказанное однажды (ночной у врат)                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
   loadDispatch(savedData.dispatch);                          // канал машиниста: сыгранные сцены «Ничего» и «Заочно»
   loadHeard(savedData.heard);                                // что странник носит при себе — мысли на сцене (world/heard.js)
   // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
@@ -333,6 +338,7 @@ function saveData() {
   dispatch: saveDispatch(),
   thread: saveThread(),
   folk: saveFolk(),
+  jesterFire: saveJesterFire(),
   heard: saveHeard(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
@@ -779,6 +785,7 @@ function render() {
     drawList.push({ k: b.y + 2.5, prop: { draw: c => drawBoatFront(c, b.x, b.y, b.dir, t) } });
   }
   for (const p of propsIn(camX, camY, camX + vw, camY + vh)) drawList.push({ k: p.gy, prop: { draw: c => drawProp(c, p, t) } });   // мусор, рыбацкое место, пар
+  if (JFIRE && Math.abs(JFIRE.x - camX - vw / 2) < vw && Math.abs(JFIRE.y - camY - vh / 2) < vh + 80) drawList.push({ k: JFIRE.y + 40, prop: { draw: c => drawGateFire(c, t) } });   // огонь поперёк дороги у костра Шута
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
@@ -2125,6 +2132,8 @@ function updateWorldSystems() {
     const ev = stepThread(player, flags.walked, dispatchPlaying() || riding() || isInSettlement(player.x + 6, player.y + 23));
     if (ev) { showLore(ev.text); playPickup(); pickupSparkle(ev.x, ev.y); saveNow(); }
   }
+  // костёр Шута у кольца огня: огонь держит край; ночью — колпак над огнём (world/jesterFire.js)
+  { const jv = stepJesterFire(player, t, !player.moving); if (jv && jv.hint) sayUnderfoot(jv.hint); if (jv && jv.bell) playTone(1318.5, 1.4, 'sine', 0.022); }
   // народ мира: постоял у таблички — голос говорит по фразе (world/folk.js)
   if (!redNoon.active && !dispatchPlaying()) { const v = stepFolk(player, t); if (v && v.once) saveNow(); }
 
@@ -2609,6 +2618,7 @@ events.on('location.sit', (loc) => { if (loc && loc.id === 'theater') sitAtStage
 events.on('location.alt', (loc) => {
   const a = loc.altNow && loc.altNow();
   if (!a) return;
+  if (a.key === 'fire_play' || a.key === 'fire_move') { showLook({ name: 'У огня', look: a.key === 'fire_play' ? jfDeal(t) : jfMove(t) }); saveNow(); return; }   // партия у костра Шута
   if (a.key === 'pithos_out') { wantOut(); return; }   // из пифоса — вылезти
   if (a.key === 'boat_alt') { rideBoat(loc, true); return; }   // мостки: плыть ко второй стороне
   if (a.key === 'under_greet' && under.greet()) playBlow();
@@ -2639,6 +2649,7 @@ events.on('location.use', (loc) => {
   // сеть странников: заверить чужую записку — красная точка печати; не слушать встречного (ui/netui.js)
   if (actionKey === 'net_cert') { netVote(loc.net, 'cert').then(r => showLore(r.error ? VOTE_ERR[r.error] || VOTE_ERR.refused : 'Заверено. На записке теперь красная точка печати.')); return; }
   if (actionKey === 'net_mute') { const off = !net.muted.has(loc.net); mute(loc.net, off); showLore(off ? 'Слова этого странника больше не доходят.' : 'Этого странника снова слышно.'); return; }
+  if (actionKey === 'fire_ask' || actionKey === 'fire_yield') { showLook({ name: 'У огня', look: actionKey === 'fire_ask' ? jfAsk(t) : jfYield(t) }); saveNow(); return; }   // костёр Шута: просить — отказ на вечер; поддаться — «Не смей»
   if (actionKey === 'house_exit') { leaveHouse(); return; }   // дом пробуждения: на улицу
   if (actionKey === 'house_enter') { enterHouse(); return; }  // …и обратно, в пустой тёмный дом
   if (actionKey === 'under_up') { goUp(loc); return; }      // изнанка: лестница своей комнаты

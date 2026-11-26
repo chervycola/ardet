@@ -186,6 +186,9 @@ function handAt(sh, dir, time, off, swing) {
   }
   return { x: q(x + swing), y: q(y) };
 }
+// у огня края ночью W греет колпак (world/jesterFire.js): на голове его нет — держит над костром
+let CAP_OFF = () => false;
+export function setCapOff(fn) { CAP_OFF = typeof fn === 'function' ? fn : () => false; }
 export function drawNPC_jester(jx, jy, opts = {}) {
   const home = opts.moving === undefined, moving = !!opts.moving;
   const x0 = q(jx), y0 = q(jy);
@@ -261,8 +264,10 @@ export function drawNPC_jester(jx, jy, opts = {}) {
     for (const [y, a, b] of rows) for (let x = a; x <= b; x++)
       r(hx + x + shear(y), hy + y, 1, 1, b > a && x === b ? dark : b > a && x === a ? lit : main);
   };
+  if (!(home && CAP_OFF())) {
   horn(HORN_L, KV, KV, KD); horn(HORN_M, NI, K4, NI); horn(HORN_R, KV, KV, KD);
   for (const [bx, bb] of BELLS) { const ox = hx + bx + shear(bb - 1); r(ox, hy + bb, 1, 1, L1); r(ox + 1, hy + bb, 1, 1, L2); r(ox, hy + bb + 1, 1, 1, AS); r(ox + 1, hy + bb + 1, 1, 1, S0); }
+  }
   // ── каскад: три вещи накрест из руки в руку; каждая вертится в полёте, в руке лежит
   //    остриём вверх; раз в шесть бросков у каждой — другое оружие, одинаковых нет ──
   const k0 = Math.floor(t / S);
