@@ -359,7 +359,7 @@ function saveNow() { if (!STREAM) saveGame(saveData()); }
 setPosOverride(() => (house.active ? doorOutside() : stage.active ? { x: STAGE_DOOR.x, y: STAGE_DOOR.y } : under.active ? under.ret : null));   // карта мира: странник там, где спустился (или у дома)
 Object.assign(menuInscriptions, UNDER_INSC);
 
-initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t });
+initStream({ locations, getVisited: () => flags.visited, getFrames: () => _t, getPerf: () => (PERF ? perfLine() : '') });
 
 // Замок городка объясняет себя голосом мира — не чаще раза в полминуты
 let lockHintAt = -99999;
@@ -2169,8 +2169,18 @@ function updateWorldSystems() {
 // один шаг; вкладка спала — долг не копим (не больше 4 шагов за кадр).
 const STEP = 1000 / 60, SLACK = 2, MAX_STEPS = 4;
 let lastNow = 0, acc = 0;
+// ?perf — замер цены кадра (ROADMAP Г7): сколько миллисекунд уходит на шаги мира и рисунок кадра;
+// строка — в счёте стрима (?stream&perf), её читает харнесс
+const PERF = typeof location !== 'undefined' && /[?&]perf\b/.test(location.search);
+const PF = [];
+function perfLine() {
+  if (!PF.length) return '';
+  const a = PF.slice().sort((x, y) => x - y), q = k => a[Math.min(a.length - 1, Math.floor(a.length * k))];
+  return `КАДР: медиана ${q(0.5).toFixed(1)} мс · 95% ${q(0.95).toFixed(1)} · 99% ${q(0.99).toFixed(1)} · макс ${a[a.length - 1].toFixed(1)} · дольше 16,7: ${PF.filter(v => v > 16.7).length} из ${PF.length}`;
+}
 function loop(now) {
   requestAnimationFrame(loop);
+  const pf0 = PERF ? performance.now() : 0;
   if (typeof now !== 'number') now = performance.now();
   if (!lastNow) lastNow = now;
   acc += Math.min(250, Math.max(0, now - lastNow));
@@ -2186,6 +2196,7 @@ function loop(now) {
   }
   if (n === MAX_STEPS && acc > STEP) acc = 0;
   render();
+  if (PERF) { PF.push(performance.now() - pf0); if (PF.length > 1800) PF.shift(); }
 }
 
 // ═══ ENTRY → GAME ═══

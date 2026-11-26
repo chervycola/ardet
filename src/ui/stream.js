@@ -21,7 +21,7 @@ export function tallyLine(found, total) {
   return `ОПИСЬ НАЙДЕННОГО: ${found} ИЗ ${total}. ОСТАТОК УЧТЁН.`;
 }
 
-export function initStream({ locations, getVisited, getFrames }) {
+export function initStream({ locations, getVisited, getFrames, getPerf = null }) {
   if (!STREAM || typeof document === 'undefined') return;
   document.body.classList.add('stream');
   const css = document.createElement('style');
@@ -47,7 +47,7 @@ export function initStream({ locations, getVisited, getFrames }) {
   const tick = () => {
     const found = [...getVisited()].filter(id => ids.has(id)).length;
     const s = Math.floor(getFrames() / 60), mm = Math.floor(s / 60), ss = String(s % 60).padStart(2, '0');
-    el.innerHTML = `<span class="k">ДЕЛО № ${no} · В ПУТИ ${mm}:${ss}</span><br>${tallyLine(found, all.length)}`;
+    el.innerHTML = `<span class="k">ДЕЛО № ${no} · В ПУТИ ${mm}:${ss}</span><br>${tallyLine(found, all.length)}` + (getPerf && getPerf() ? `<br><span class="k">${getPerf()}</span>` : '');
   };
   tick();
   setInterval(tick, 1000);
