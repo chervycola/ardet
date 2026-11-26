@@ -16,6 +16,7 @@ import { useTexts } from '../world/useActions.js';
 import { paginate, pageMeasure } from './pages.js';
 import { STREAM } from './stream.js';
 import { placeStamp } from '../world/placeStamp.js';
+import { readThrough } from '../world/thread.js';
 import { hasSignature, signatureSVG } from './signature.js';
 import { hasReturned } from '../core/sessionMemory.js';
 import { opisState, opisLine, inscribe } from '../world/opis.js';
@@ -466,7 +467,8 @@ export function startDialogue(loc) {
   }
 
   dlgLoc = loc;
-  dlgLines = (loc.talkLinesReturn && hasReturned()) ? loc.talkLinesReturn : loc.talkLines;
+  dlgLines = (loc.talkLinesReturn && hasReturned()) ? loc.talkLinesReturn
+    : (loc.talkLinesSecond && readThrough(loc.npc)) ? loc.talkLinesSecond : loc.talkLines;   // второй разговор — свои реплики
   dlgLines = withIntro(loc.npc, dlgLines, loc.talkLines);   // не знакомы — представится и во втором разговоре
   dlgIndex = 0;
   state.transition('dialogue');

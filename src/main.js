@@ -153,6 +153,7 @@ import { lie, startLie, startOut, stepLie, wantOut, stopLie, drawLying, isLying,
 import { climb, startClimb, stepClimb, stopClimb, drawClimb, climbDepth } from './world/climbOut.js';
 import { drawMossDream } from './render/mindfx.js';
 import { stepDispatch, skipLine, noteTalkedOut, noteBrake, noteLie, isPlaying as dispatchPlaying, saveDispatch, loadDispatch } from './world/dispatch.js';
+import { stepThread, drawThreadNote, saveThread, loadThread, noteReadThrough, incomingNotes, thread as threadState, STAY as THREAD_STAY } from './world/thread.js';
 import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
 import { SCENES } from './content/dispatch_scenes.js';
 
@@ -200,7 +201,7 @@ window.addEventListener('keydown', e => {
   e.preventDefault(); e.stopPropagation();                         // Enter — дальше по строке, не «осмотреть»
   dispatchEvent(skipLine(), announce);
 }, true);
-events.on('dialogue.done', npc => noteTalkedOut(npc));           // машинист выговорен — он попросит доложить
+events.on('dialogue.done', npc => { noteTalkedOut(npc); noteReadThrough(npc); });   // прочитан до конца: машинист попросит доложить; второй разговор — свои реплики (world/thread.js)           // машинист выговорен — он попросит доложить
 initMetaFx();
 initTerminal();
 initShop();
@@ -295,6 +296,7 @@ if (savedData) {
   if (savedData.stands) loadStands(savedData.stands);        // «Стоянка на двоих»: свои вмятины и цепочки за огнём
   loadNames(savedData.names, savedData.talkedTo);            // имена — по знакомству (world/names.js)
   loadStage(savedData.stage);                                // сцена Театра Теней: номер прихода, пулы (world/stage.js)
+  loadThread(savedData.thread);                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
   loadDispatch(savedData.dispatch);                          // канал машиниста: сыгранные сцены «Ничего» и «Заочно»
   loadHeard(savedData.heard);                                // что странник носит при себе — мысли на сцене (world/heard.js)
   // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
@@ -327,6 +329,7 @@ function saveData() {
   names: saveNames(),
   stage: saveStage(),
   dispatch: saveDispatch(),
+  thread: saveThread(),
   heard: saveHeard(),
   visited: Array.from(flags.visited),
   walked: Array.from(flags.walked),
@@ -803,6 +806,7 @@ function render() {
 
   if (!redNoon.active) {                            // красный полдень: пасхалки прячутся
     drawLoreItems({ x: camX, y: camY });
+    drawThreadNote(worldCtx, t);                    // лист из следующего кольца — летит или лежит
     drawInscriptions({ x: camX, y: camY }, locations);
   }
   drawJesterGraffiti({ x: camX, y: camY });
@@ -1839,6 +1843,8 @@ function renderUnder() {
   const m = /[?&]dispatch=(\w+)/.exec(location.search);
   if (m) { const ids = SCENES.map(s => s.id), k = ids.indexOf(m[1]); if (k >= 0) loadDispatch({ done: ids.slice(0, k + 1), flags: ['talkedOut'] }); }
 }
+// ?thread — проверка руками: записка из следующего кольца долетает почти сразу (world/thread.js)
+if (/[?&]thread\b/.test(location.search)) for (let n = 1; n <= 9; n++) threadState.stay[n] = THREAD_STAY - 120;
 // ?at=<id места> — проверка руками: сразу к порогу места (поезд — ?at=train, веха — ?at=br_back), изгородь открыта
 {
   const m = /[?&]at=([\w-]+)/.exec(location.search), l = m && locations.find(q => q.id === m[1]);
@@ -2111,6 +2117,11 @@ function updateWorldSystems() {
 
   // Check for lore pickup
   if (!redNoon.active) checkLorePickup(player);
+  // нить «куда дальше»: из следующего кольца ветром прилетает лист (world/thread.js)
+  if (!redNoon.active) {
+    const ev = stepThread(player, flags.walked, dispatchPlaying() || riding() || isInSettlement(player.x + 6, player.y + 23));
+    if (ev) { showLore(ev.text); playPickup(); pickupSparkle(ev.x, ev.y); saveNow(); }
+  }
 
   // тихое подаёт голос: вещь в тени рядом — шорох или скрип с её стороны (world/quietSound.js)
   if (_t % 12 === 0) { stepQuietVoices(); stepNoonPaper(); }
@@ -2472,6 +2483,7 @@ const placeBelow = id => UNDER_PLACES[id] || (ROOMS.find(R => R.id === id) || {}
 const cap = s => s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s;
 function inventoryData() {
   const notes = getCollectedIds().map(id => loreTextOf(id)).filter(Boolean).map((text, i) => ({ n: i + 1, text }));
+  const incoming = incomingNotes();                 // входящие без подписи — записки из следующего кольца (world/thread.js)
   const ways = [...under.seen].filter(k => DESCENTS[k]).map(k => {
     const th = thingById(DESCENTS[k]), t = useTexts[k];
     return `${cap(t ? t.title : k)} → ${(th && placeBelow(th.room)) || 'вниз'}`;
@@ -2485,7 +2497,7 @@ function inventoryData() {
   if (under.ticket) rites.push('Билет «до колодца. туда.» — в кармане.');
   const given = (saveTownWell() || {}).g | 0;
   if (given) rites.push(`Ведро общего дна — своё отдано: ${given}.`);
-  return { notes, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines(), copies: copyLines(), hold: setHand, hand: opisLines() };
+  return { notes, incoming, total: getTotalCount(), ways, rooms, rites, clothes: wardrobeLines(), copies: copyLines(), hold: setHand, hand: opisLines() };
 }
 initInventory(inventoryData, () => !loreActive() && !isMapOpen());
 

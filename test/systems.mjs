@@ -5430,6 +5430,80 @@ setCtx(ctx);
   });
 }
 
+// ═══ МЯГКАЯ НИТЬ «КУДА ДАЛЬШЕ» (world/thread.js, actBoards.js; ROADMAP И7) ═══
+{
+  const TH = await imp('world/thread.js');
+  const TN = await imp('content/thread_notes.js');
+  const UL = await imp('content/ulitsa_db.js');
+  const DSC = await imp('world/disc.js');
+  const DL = await imp('content/dialogues.js');
+  const LC2 = await imp('world/locations.js');
+  const FSt = await import('fs');
+  test('нить: записка на каждое кольцо 1–9 — из следующего, с печатью места; без подписи; фигур и Беккета нет; на «ты» не зовут', () => {
+    for (let n = 1; n <= 9; n++) {
+      const N = TN.THREAD_NOTES[n];
+      assert(N && N.text && N.text.length > 20, `кольцо ${n}: записки нет`);
+      eq(N.to, n < 9 ? n + 1 : 'fire', `кольцо ${n}: не из следующего`);
+      assert(!/Старц|Старец|Лунн|Шут|\bSol\b|беккет|beckett|годо|godot/i.test(N.text), `кольцо ${n}: имя в тексте`);
+      assert(!/(^|[^а-яё])(ты|тебе|тебя|вы|вас|вам)([^а-яё]|$)/i.test(N.text), `кольцо ${n}: обращение к страннику`);
+      if (n < 9) assert(TH.stampOf(n).includes(UL.SEGMENTS[n].name), `кольцо ${n}: печать не следующего кольца`);
+    }
+  });
+  test('нить: побыл в кольце — лист летит снаружи и ложится перед странником; подобрал — входящая; одна на кольцо; был дальше — не летит; сохранение', () => {
+    TH._resetThread();
+    const p = DSC.trailPoint('south', DSC.ringD(3, 100)), pl = { x: Math.round(p.x) - 6, y: Math.round(p.y) - 23 };
+    eq(DSC.ringAt(pl.x + 6, pl.y + 23), 3, 'точка не в кольце 3');
+    let ev = null;
+    for (let i = 0; i < TH.STAY - 1; i++) TH.stepThread(pl, new Set());
+    assert(!TH.thread.note, 'долетело раньше срока');
+    TH.stepThread(pl, new Set());
+    assert(TH.thread.note && TH.thread.note.ring === 3, 'лист не полетел');
+    const N = TH.thread.note, start = TH.notePos(N);
+    assert(Math.hypot(start.x - N.x, start.y - N.y) > 100 && start.h > 40, 'лист не издалека и не сверху');
+    for (let i = 0; i < TH.FLY + 2 && !ev; i++) ev = TH.stepThread({ x: pl.x + 400, y: pl.y }, new Set());
+    assert(!ev && TH.thread.note, 'подобрался издалека');
+    ev = TH.stepThread({ x: N.x - 6, y: N.y - 10 }, new Set());
+    assert(!ev, 'подобрался, не сдвинувшись');
+    ev = TH.stepThread({ x: N.x - 6, y: N.y - 10, moving: true }, new Set());
+    assert(ev && ev.got === 3 && /кольцо 4 · восток · два очага/.test(ev.text), 'не подобрал или не та печать');
+    for (let i = 0; i < TH.STAY * 2; i++) TH.stepThread(pl, new Set());
+    assert(!TH.thread.note, 'вторая записка на то же кольцо');
+    const p5 = DSC.trailPoint('south', DSC.ringD(5, 100)), pl5 = { x: Math.round(p5.x) - 6, y: Math.round(p5.y) - 23 };
+    for (let i = 0; i < TH.STAY + 5; i++) TH.stepThread(pl5, new Set(['steamshadows:west']));
+    assert(!TH.thread.note && TH.thread.skipped.has(5), 'полетело, хотя в следующем кольце уже был');
+    eq(TH.incomingNotes().map(n => n.n).join(), '3', 'во входящих — лишнее');
+    for (let i = 0; i < 50; i++) TH.stepThread(pl, new Set(), true);
+    const saved = JSON.parse(JSON.stringify(TH.saveThread()));
+    TH._resetThread(); TH.loadThread(saved);
+    eq(TH.incomingNotes().map(n => n.n).join(), '3', 'входящие не сохранились');
+    assert(TH.thread.stay[3] >= TH.STAY && TH.thread.skipped.has(5), 'время в кольцах не сохранилось');
+    TH._resetThread();
+  });
+  test('нить: вторая встреча с W — свои реплики (до пяти строк) с загадкой на юг; выбирается, когда первый разговор прочитан; афиши актов у тропы колец 6–9', () => {
+    const lines = DL.dialogues.jester_home_second;
+    assert(lines && lines.length >= 3, 'второй встречи нет');
+    for (const t of lines) assert(t.split('\n').length <= 5, 'реплика длиннее пяти строк');
+    assert(/южной тропе/.test(lines.join(' ')) && /напишут/.test(lines.join(' ')), 'нет загадки-направления');
+    LC2.attachContent({}, DL.dialogues);                          // как в main.js
+    const jh = LC2.locations.find(l => l.id === 'jester_home');
+    assert(jh && jh.talkLinesSecond === lines, 'вторая встреча не подключена к месту');
+    TH._resetThread();
+    assert(!TH.readThrough('jester'), 'прочитан без чтения');
+    TH.noteReadThrough('jester');
+    assert(TH.readThrough('jester'), 'не запомнил');
+    TH._resetThread();
+    const U = FSt.readFileSync(new URL('../src/ui/ui.js', import.meta.url), 'utf8'), M = FSt.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+    assert(/talkLinesSecond && readThrough\(loc\.npc\)/.test(U), 'ui.js не выбирает вторую встречу');
+    assert(/noteReadThrough\(npc\)/.test(M) && /stepThread\(player/.test(M) && /thread: saveThread\(\)/.test(M) && /loadThread\(savedData\.thread\)/.test(M), 'main.js: нить не проведена');
+    const acts = LC2.locations.filter(l => /^act_\d$/.test(l.id));
+    eq(acts.map(l => l.id).sort().join(), 'act_6,act_7,act_8,act_9', 'афиши актов');
+    for (const a of acts) {
+      eq(DSC.ringAt(a.x + a.w / 2, a.y + a.h), +a.id.slice(4), `${a.id}: не в своём кольце`);
+      assert(/^Афиша у тропы/.test(a.look) && /АКТ/.test(a.look), `${a.id}: осмотр`);
+    }
+  });
+}
+
 const passed = results.filter(r => r.status === 'pass').length;
 const failed = results.filter(r => r.status === 'fail');
 console.log('\n── SYSTEMS TESTS ──');

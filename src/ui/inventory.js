@@ -27,6 +27,11 @@ export function inventoryLines(d) {
   d.notes.forEach(n => L.push({ n: num(n.n), text: firstWords(n.text), note: n }));
   const k = d.notes.length;
   if (k < d.total) L.push({ n: k + 1 === d.total ? num(d.total) : `${num(k + 1)}–${String(d.total).padStart(3, '0')}`, text: k + 1 === d.total ? 'графа не заполнена' : 'графы не заполнены', empty: true });
+  // входящие без подписи — записки из следующего кольца (world/thread.js); сколько их впереди — не сказано
+  if (d.incoming && d.incoming.length) {
+    L.push({ h: 'Входящие' });
+    d.incoming.forEach((n, i) => L.push({ n: 'вх. б/н', text: firstWords(n.text), note: { n: 'in' + (i + 1), text: n.text } }));
+  }
   L.push({ h: 'Ходы изнанки' });
   if (d.ways.length) d.ways.forEach(w => L.push({ text: w }));
   else L.push({ text: 'графа не заполнена', empty: true });
@@ -101,7 +106,7 @@ export function initInventory(getData, can = () => true) {
       }
     }
     else if (what.startsWith('note:')) {
-      const n = data && data.notes.find(x => String(x.n) === what.slice(5));
+      const n = data && [...data.notes, ...(data.incoming || []).map((x, i) => ({ n: 'in' + (i + 1), text: x.text }))].find(x => String(x.n) === what.slice(5));
       if (n) { playClick(); detail = n; render(); }
     }
   });

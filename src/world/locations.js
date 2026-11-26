@@ -160,6 +160,7 @@ import { captchaLocation } from './captcha.js';
 locations.push(captchaLocation);
 // ловушки взгляда: часы, рука, лужа, подсказка, верстовые столбы
 import { buildRecount } from './recount.js';
+import { buildActBoards } from './actBoards.js';
 buildRecount(locations);
 // нити: номерок 1889 → окно «до востребования»
 import { buildThreads } from './threads.js';
@@ -258,6 +259,7 @@ import { buildDispatchPost, buildForkStone } from './dispatch.js';
 import { isInSettlement } from './physics.js';
 locations.push(...buildDispatchPost(locations, isInSettlement));
 locations.push(...buildForkStone(locations));                   // камень на развилке — «Развилка»
+buildActBoards(locations);                     // акты — у южной тропы, на кольцах 6–9 (мягкая нить «куда дальше»): последними, чужих якорей не занимают
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)
@@ -278,6 +280,8 @@ export function attachContent(looks, dialogues) {
       loc.talkName = loc.name;
       // вторая встреча: после падения за край и пробуждения дома (ui.startDialogue)
       if (dialogues[loc.id + '_return']) loc.talkLinesReturn = dialogues[loc.id + '_return'];
+      // второй разговор в том же пути — когда первый прочитан до конца (world/thread.js readThrough)
+      if (dialogues[loc.id + '_second']) loc.talkLinesSecond = dialogues[loc.id + '_second'];
     }
   }
 }
