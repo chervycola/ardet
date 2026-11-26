@@ -266,6 +266,9 @@ buildFolk(locations);
 // костёр Шута у кольца огня (world/jesterFire.js): южная тропа, у внутренней кромки огня
 import { buildJesterFire } from './jesterFire.js';
 buildJesterFire(locations);
+// пожарный щит № 1 — у выхода остальных дорог к огню (world/fireShields.js)
+import { buildFireShields } from './fireShields.js';
+buildFireShields(locations);
 
 // проход глубины: на клетку — три громких и пятнадцать позиций на виду, прочее —
 // в тени, проступает вблизи (world/depth.js; weave/SCALE.md)

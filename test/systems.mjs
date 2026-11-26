@@ -5615,6 +5615,16 @@ setCtx(ctx);
     assert(/^Сбрасываешь туза\. (Он|W) смотрит/.test(JFm.yieldCard(T2)), 'имя до знакомства');
     JFm._resetJesterFire();
   });
+  test('пожарный щит № 1 — у выхода северной, восточной и западной дорог, перед огнём', () => {
+    const sh = LJ.locations.filter(l => /^fire_shield_/.test(l.id));
+    eq(sh.map(l => l.id).sort().join(), 'fire_shield_east,fire_shield_north,fire_shield_west', 'щиты');
+    for (const l of sh) {
+      const d = DJ.warpedDist(l.x + l.w / 2, l.y + l.h);
+      assert(d > DJ.RINGS_D - 120 && d < DJ.RINGS_D, `${l.id}: не перед огнём (${Math.round(d)})`);
+      assert(/ОТВЕТСТВЕННЫЙ: —/.test(l.look), `${l.id}: трафарет`);
+      l.drawSelf(fakeCtx(), l, 0);
+    }
+  });
 }
 
 // ═══ W ПЕРЕД ПАДЕНИЕМ (world/edgeJester.js; слово автора 26.11) ═══
