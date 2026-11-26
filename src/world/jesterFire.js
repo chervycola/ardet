@@ -21,7 +21,7 @@ import { isNamed } from './names.js';
 // до знакомства фигуру не называют (world/names.js): «W» — после, «он» — до
 const W = s => s.replace(/\{W\}/g, isNamed('jester') ? 'W' : 'Он').replace(/\{w\}/g, isNamed('jester') ? 'W' : 'он');
 
-export const JF = { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0 };
+export const JF = { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0, curD: 0 };
 export let FIRE = null;                          // костёр: { x, y } (земля)
 const CORR = 34;                                 // полуширина прохода у дороги
 const today = t => dayIndex(t);
@@ -36,8 +36,12 @@ export function roadAt(D) {
 }
 // ── место ──
 export function buildJesterFire(locations) {
-  const p = roadAt(RINGS_D + 6);
-  FIRE = { x: Math.round(p.x + 34), y: Math.round(p.y) };
+  // перед огнём: к W подходят, не входя в жар — ноги у подхода (низ места + 28) ещё до огня; кромки рваные — подбираем
+  for (let D = RINGS_D - 30; D > RINGS_D - 200; D -= 4) {
+    const p = roadAt(D);
+    FIRE = { x: Math.round(p.x + 34), y: Math.round(p.y) };
+    if (warpedDist(FIRE.x + 31, FIRE.y + 28) < RINGS_D - 2 && warpedDist(FIRE.x, FIRE.y) < RINGS_D) break;
+  }
   const loc = {
     id: 'jester_fire', name: 'W', zone: 'street', npc: 'jester',
     x: FIRE.x + 16, y: FIRE.y - 46, w: 30, h: 46,
@@ -59,12 +63,14 @@ const nearCorridor = (x, y) => {
   const d = y - TOWN.y1;                                               // южная тропа: глубина — по y
   return d > 0 && Math.abs(x - trailPoint('south', d).x) < CORR;
 };
-// точка в огне, куда наружу не пускают (обратно — всегда: снаружи огонь не держит)
+// точка в огне, куда наружу не пускают: в огне можно только назад — к городку (глубже, чем стоишь, — нельзя);
+// снаружи огонь не держит вовсе (обратно — всегда). curD — где ноги сейчас (stepJesterFire)
 export function fireBlocked(x, y, t) {
   if (JF.outside) return false;
   const d = warpedDist(x, y);
   if (d < RINGS_D + 6 || d > RINGS_D + FIRE_W - 4) return false;
-  return !(openTonight(t) && nearCorridor(x, y));
+  if (openTonight(t) && nearCorridor(x, y)) return false;
+  return d > JF.curD + 0.05;
 }
 
 // ── партия ──
@@ -114,6 +120,7 @@ export function ask(t) {
 export function stepJesterFire(player, t, still) {
   if (!FIRE) return null;
   const fx = player.x + 6, fy = player.y + 23, d = warpedDist(fx, fy);
+  JF.curD = d;
   if (d > RINGS_D + FIRE_W - 2) JF.outside = true;
   else if (d < RINGS_D - 2) JF.outside = false;
   // жар держит: упёрся в огонь — строка под ногами (раз в две минуты)
@@ -177,4 +184,4 @@ export function loadJesterFire(d) {
   for (const k of ['refused', 'parted', 'games', 'capNight']) if (Number.isFinite(d[k])) JF[k] = d[k];
   JF.caught = !!d.caught; JF.dealt = false; JF.cap = null;
 }
-export function _resetJesterFire() { Object.assign(JF, { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0 }); }
+export function _resetJesterFire() { Object.assign(JF, { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0, curD: 0 }); }

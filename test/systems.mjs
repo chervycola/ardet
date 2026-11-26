@@ -5579,7 +5579,8 @@ setCtx(ctx);
     const l = LJ.locations.find(q => q.id === 'jester_fire');
     assert(l && l.npc === 'jester' && JFm.FIRE, 'костра нет');
     const d = DJ.warpedDist(JFm.FIRE.x, JFm.FIRE.y);
-    assert(d > DJ.RINGS_D - 20 && d < DJ.RINGS_D + 30, `не у кромки огня: ${Math.round(d)}`);
+    assert(d > DJ.RINGS_D - 50 && d < DJ.RINGS_D, `не перед кромкой огня: ${Math.round(d)}`);
+    assert(DJ.warpedDist(l.x + l.w / 2, l.y + l.h + 5 + 23) < DJ.RINGS_D + 6, 'к W не подойти — ноги у подхода в жару');
     assert(DLJ.dialogues.jester_fire && DLJ.dialogues.jester_fire.length >= 2, 'разговора нет');
     for (const tx of DLJ.dialogues.jester_fire) { assert(tx.split('\n').length <= 5, 'реплика длиннее пяти строк'); assert(!/пропуст|пройти|пусти/i.test(tx), 'о проходе — ни слова'); }
   });
@@ -5591,6 +5592,11 @@ setCtx(ctx);
     const before = JFm.roadAt(DJ.RINGS_D - 40);
     assert(!JFm.fireBlocked(before.x, before.y, T), 'держит до огня');
     JFm.JF.outside = true; assert(!JFm.fireBlocked(road.x, road.y, T), 'снаружи не пускает обратно'); JFm.JF.outside = false;
+    // застал рассвет в огне: глубже — нельзя, назад — можно
+    JFm.JF.curD = DJ.RINGS_D + 60;
+    const deeper = JFm.roadAt(DJ.RINGS_D + 70), back = JFm.roadAt(DJ.RINGS_D + 50);
+    assert(JFm.fireBlocked(deeper.x, deeper.y, T) && !JFm.fireBlocked(back.x, back.y, T), 'в огне: наружу пускает или назад не пускает');
+    JFm.JF.curD = 0;
     assert(/нельзя/.test(JFm.ask(T)) && /сказано/.test(JFm.ask(T)), 'отказ на вечер');
     JFm.deal(T); const a = JFm.move(T);
     assert(/Опять выиграл\. Не представляю, как у тебя это получается\./.test(a) && !/ложится/.test(a), 'попросил — а огонь лёг');
@@ -5608,6 +5614,35 @@ setCtx(ctx);
     assert(JFm.JF.caught && JFm.JF.games === 3 && !JFm.fireBlocked(road.x, road.y, T2), 'не сохранилось');
     assert(/^Сбрасываешь туза\. (Он|W) смотрит/.test(JFm.yieldCard(T2)), 'имя до знакомства');
     JFm._resetJesterFire();
+  });
+}
+
+// ═══ W ПЕРЕД ПАДЕНИЕМ (world/edgeJester.js; слово автора 26.11) ═══
+{
+  const EJm = await imp('world/edgeJester.js');
+  const BRm = await imp('world/brainrot.js');
+  const JFe = await imp('world/jesterFire.js');
+  const DLe = await imp('content/dialogues.js');
+  test('W перед падением: за огнём, когда распад у края, — проступает впереди и говорит; раз на спуск; отпустило — снова', () => {
+    EJm.resetEdgeJester(); JFe._resetJesterFire();
+    const pl = { x: 1000, y: 1000, dir: 1 };
+    BRm._setLevel(90);
+    assert(!EJm.stepEdgeJester(pl) && !EJm.EJ.phase, 'встретил внутри огня');
+    JFe.JF.outside = true; BRm._setLevel(60);
+    assert(!EJm.stepEdgeJester(pl) && !EJm.EJ.phase, 'встретил рано');
+    BRm._setLevel(85);
+    EJm.stepEdgeJester(pl);
+    assert(EJm.EJ.phase === 'in' && Math.hypot(EJm.EJ.at.x - pl.x, EJm.EJ.at.y - pl.y) > 30, 'не проступил впереди');
+    let ev = null;
+    for (let i = 0; i < 60 && !ev; i++) ev = EJm.stepEdgeJester(pl);
+    assert(ev && ev.talk && ev.talk.npc === 'jester' && ev.talk.talkLines === DLe.dialogues.jester_edge, 'разговора нет');
+    for (const tx of DLe.dialogues.jester_edge) { assert(tx.split('\n').length <= 5, 'реплика длиннее пяти строк'); assert(!/беккет|beckett|годо|godot/i.test(tx), 'имя'); }
+    for (let i = 0; i < 200; i++) EJm.stepEdgeJester(pl);
+    assert(!EJm.EJ.phase && EJm.edgeJesterAlpha() === 0, 'не ушёл');
+    for (let i = 0; i < 50; i++) assert(!EJm.stepEdgeJester(pl), 'встретил дважды за спуск');
+    BRm._setLevel(10); EJm.stepEdgeJester(pl); BRm._setLevel(85); EJm.stepEdgeJester(pl);
+    eq(EJm.EJ.phase, 'in', 'после того как отпустило — не встретил снова');
+    EJm.resetEdgeJester(); JFe._resetJesterFire(); BRm._setLevel(0);
   });
 }
 

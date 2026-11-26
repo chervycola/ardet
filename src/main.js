@@ -58,7 +58,7 @@ import { drawNPC_elder } from './sprites/npcs/elder.js';
 import { drawNPC_nocturnal } from './sprites/npcs/nocturnal.js';
 import { drawDumpsterDemon } from './sprites/npcs/dumpster.js';
 import * as locSprites from './sprites/locations/index.js';
-import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing } from './ui/ui.js';
+import { showMenu, hideMenu, initUI, getActiveLoc, showLook, closeLook, menuInscriptions, openThing, startDialogue } from './ui/ui.js';
 import { noteLook, noteUse, relookText, saveRelook, loadRelook, lookCount, forgetTag } from './world/relook.js';
 import { quietVoice } from './world/quietSound.js';
 import { looks } from './content/looks.js';
@@ -157,6 +157,7 @@ import { stepThread, drawThreadNote, saveThread, loadThread, noteReadThrough, in
 import { stepFolk, saveFolk, loadFolk } from './world/folk.js';
 import { FIRE as JFIRE, fireBlocked, stepJesterFire, deal as jfDeal, move as jfMove, yieldCard as jfYield, ask as jfAsk, drawGateFire, capOff as jfCapOff, saveJesterFire, loadJesterFire } from './world/jesterFire.js';
 import { setCapOff } from './sprites/npcs/jester.js';
+import { stepEdgeJester, resetEdgeJester, edgeJesterAlpha, edgeJesterAt } from './world/edgeJester.js';
 import { initDispatchStrip, dispatchEvent, stepDispatchStrip } from './ui/dispatchStrip.js';
 import { SCENES } from './content/dispatch_scenes.js';
 
@@ -788,6 +789,7 @@ function render() {
   }
   for (const p of propsIn(camX, camY, camX + vw, camY + vh)) drawList.push({ k: p.gy, prop: { draw: c => drawProp(c, p, t) } });   // мусор, рыбацкое место, пар
   if (JFIRE && Math.abs(JFIRE.x - camX - vw / 2) < vw && Math.abs(JFIRE.y - camY - vh / 2) < vh + 80) drawList.push({ k: JFIRE.y + 40, prop: { draw: c => drawGateFire(c, t) } });   // огонь поперёк дороги у костра Шута
+  { const ea = edgeJesterAt(); if (ea) drawList.push({ k: ea.y + 46, prop: { draw: c => { c.globalAlpha = edgeJesterAlpha(); drawNPC_jester(ea.x, ea.y, { moving: false }); c.globalAlpha = 1; } } }); }   // W перед падением
   drawList.sort((p, q) => p.k - q.k);
   for (const it of drawList) {
     if (it.bunting) { drawBunting(worldCtx, { x: camX, y: camY }, vw, vh, it.bunting); continue; }
@@ -2143,6 +2145,8 @@ function updateWorldSystems() {
   }
   // костёр Шута у кольца огня: огонь держит край; ночью — колпак над огнём (world/jesterFire.js)
   { const jv = stepJesterFire(player, t, !player.moving); if (jv && jv.hint) sayUnderfoot(jv.hint); if (jv && jv.bell) playTone(1318.5, 1.4, 'sine', 0.022); }
+  // за огнём, незадолго до падения, — W ещё раз: пара шуток по существу (world/edgeJester.js)
+  { const ej = stepEdgeJester(player); if (ej && ej.talk) startDialogue(ej.talk); }
   // народ мира: постоял у таблички — голос говорит по фразе (world/folk.js)
   if (!redNoon.active && !dispatchPlaying()) { const v = stepFolk(player, t); if (v && v.once) saveNow(); }
 
@@ -2297,7 +2301,7 @@ document.addEventListener('keydown', e => {
 // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
 // пробуждение — без текста, но со следами падения (слово автора 28.10): строка внизу уходит,
 // трещины экрана остаются (render/metaFx.js); подписи падения в доме нет — оверлей там не рисуется
-events.on('brainrot.recover', () => { markReturned(); hideLore(); if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
+events.on('brainrot.recover', () => { resetEdgeJester(); markReturned(); hideLore(); if (NO_HOUSE) return; intoHouse(WAKE.x, WAKE.y, true); wakeFx(); });
 
 let entryDone = false;
 { // оттиск сборки на заставке — сверка «что реально задеплоено»

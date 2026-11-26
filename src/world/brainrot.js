@@ -360,3 +360,4 @@ export function feedK() { return brainrotFreeze ? 0 : lastK; }
 export function fallKindOf() { return fallKind; }
 export function isFrozen() { return brainrotFreeze; }
 export function getLevel() { return brainrot; }
+export function _setLevel(v) { brainrot = v; }                // проверки: уровень распада напрямую

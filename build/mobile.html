@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <title>ARDET</title>
-<!-- опись листа. знаков: 4 451 280. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
-<meta name="description" content="опись листа. знаков: 4 451 280. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
+<!-- опись листа. знаков: 4 456 705. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/ -->
+<meta name="description" content="опись листа. знаков: 4 456 705. из них видимых: 1 427. остальное отдано холсту. то же место текстом: /walk/">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
@@ -916,7 +916,7 @@ html.rm #gw.wake, html.rm #gw.wake.short { animation-name: wakeblurLite; }
 </div>
 
 <canvas id="cur" width="20" height="20"></canvas>
-<script>window.ARDET_BUILD='693b6a2 · 2026-11-26';console.log('[оттиск]', '693b6a2 · 2026-11-26');
+<script>window.ARDET_BUILD='3ae3985 · 2026-11-26';console.log('[оттиск]', '3ae3985 · 2026-11-26');
 // порог. вход со стороны холста. освещение не предусмотрено.
 window.ARDET_SIZES={"assets/icons/apple-touch-icon.png":38026,"assets/icons/favicon-32.png":1907,"assets/icons/icon-512.png":265722,"assets/logo/ardet-emblem.jpg":146910,"assets/portraits/jester.png":2885327,"assets/portraits/nocturnal.png":2337733,"assets/portraits/sol.png":2688145,"assets/scenes/entry-wide.webp":293960};window.ARDET_MOBILE=1;window.ARDET_MUSIC_BASE='assets/music/';
 // на таче правый верхний угол занят кнопкой карты — радио левее
@@ -38612,8 +38612,13 @@ System.register("world/jesterFire", ["world/disc", "world/sky", "world/useAction
     exports_97("roadAt", roadAt);
     // ── место ──
     function buildJesterFire(locations) {
-        const p = roadAt(disc_js_27.RINGS_D + 6);
-        exports_97("FIRE", FIRE = { x: Math.round(p.x + 34), y: Math.round(p.y) });
+        // перед огнём: к W подходят, не входя в жар — ноги у подхода (низ места + 28) ещё до огня; кромки рваные — подбираем
+        for (let D = disc_js_27.RINGS_D - 30; D > disc_js_27.RINGS_D - 200; D -= 4) {
+            const p = roadAt(D);
+            exports_97("FIRE", FIRE = { x: Math.round(p.x + 34), y: Math.round(p.y) });
+            if (disc_js_27.warpedDist(FIRE.x + 31, FIRE.y + 28) < disc_js_27.RINGS_D - 2 && disc_js_27.warpedDist(FIRE.x, FIRE.y) < disc_js_27.RINGS_D)
+                break;
+        }
         const loc = {
             id: 'jester_fire', name: 'W', zone: 'street', npc: 'jester',
             x: FIRE.x + 16, y: FIRE.y - 46, w: 30, h: 46,
@@ -38630,14 +38635,17 @@ System.register("world/jesterFire", ["world/disc", "world/sky", "world/useAction
         return loc;
     }
     exports_97("buildJesterFire", buildJesterFire);
-    // точка в огне, куда наружу не пускают (обратно — всегда: снаружи огонь не держит)
+    // точка в огне, куда наружу не пускают: в огне можно только назад — к городку (глубже, чем стоишь, — нельзя);
+    // снаружи огонь не держит вовсе (обратно — всегда). curD — где ноги сейчас (stepJesterFire)
     function fireBlocked(x, y, t) {
         if (JF.outside)
             return false;
         const d = disc_js_27.warpedDist(x, y);
         if (d < disc_js_27.RINGS_D + 6 || d > disc_js_27.RINGS_D + disc_js_27.FIRE_W - 4)
             return false;
-        return !(openTonight(t) && nearCorridor(x, y));
+        if (openTonight(t) && nearCorridor(x, y))
+            return false;
+        return d > JF.curD + 0.05;
     }
     exports_97("fireBlocked", fireBlocked);
     // сдать: W мухлюет на виду — его карта торчит из колоды
@@ -38689,6 +38697,7 @@ System.register("world/jesterFire", ["world/disc", "world/sky", "world/useAction
         if (!FIRE)
             return null;
         const fx = player.x + 6, fy = player.y + 23, d = disc_js_27.warpedDist(fx, fy);
+        JF.curD = d;
         if (d > disc_js_27.RINGS_D + disc_js_27.FIRE_W - 2)
             JF.outside = true;
         else if (d < disc_js_27.RINGS_D - 2)
@@ -38789,7 +38798,7 @@ System.register("world/jesterFire", ["world/disc", "world/sky", "world/useAction
         JF.cap = null;
     }
     exports_97("loadJesterFire", loadJesterFire);
-    function _resetJesterFire() { Object.assign(JF, { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0 }); }
+    function _resetJesterFire() { Object.assign(JF, { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0, curD: 0 }); }
     exports_97("_resetJesterFire", _resetJesterFire);
     return {
         setters: [
@@ -38812,7 +38821,7 @@ System.register("world/jesterFire", ["world/disc", "world/sky", "world/useAction
         execute: function () {
             // до знакомства фигуру не называют (world/names.js): «W» — после, «он» — до
             W = s => s.replace(/\{W\}/g, names_js_2.isNamed('jester') ? 'W' : 'Он').replace(/\{w\}/g, names_js_2.isNamed('jester') ? 'W' : 'он');
-            exports_97("JF", JF = { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0 });
+            exports_97("JF", JF = { refused: -1, parted: -1, games: 0, caught: false, dealt: false, hand: 0, outside: false, cap: null, capNight: -1, press: 0, curD: 0 });
             exports_97("FIRE", FIRE = null); // костёр: { x, y } (земля)
             CORR = 34; // полуширина прохода у дороги
             today = t => sky_js_12.dayIndex(t);
@@ -55057,6 +55066,20 @@ System.register("content/dialogues", [], function (exports_147, context_147) {
 Не бочка.
 Ойкумена.`,
                 ],
+                // W перед падением (world/edgeJester.js; слово автора 26.11: «незадолго до падения мы видим шута ещё раз, возможно с
+                // парой шуток по существу»): за огнём, когда распад почти дошёл до края. Две шутки и прощание. Тексты (нов., п).
+                jester_edge: [
+                    `Далеко забрался.
+Здесь всё бесплатно.
+Платишь собой.
+Сдачи не дают.`,
+                    `Листаешь?
+Тебя листают.
+Честный обмен.`,
+                    `Упадёшь —
+дома встречу.
+Я короткой дорогой.`,
+                ],
                 // W у кольца огня (world/jesterFire.js; WORLD_WEAVE §3½): о проходе — ни слова; играть, не просить. Тексты (нов., п).
                 jester_fire: [
                     `Пришёл.
@@ -69469,6 +69492,8 @@ System.register("world/brainrot", ["core/time", "render/context", "sprites/playe
     exports_185("isFrozen", isFrozen);
     function getLevel() { return brainrot; }
     exports_185("getLevel", getLevel);
+    function _setLevel(v) { brainrot = v; } // проверки: уровень распада напрямую
+    exports_185("_setLevel", _setLevel);
     return {
         setters: [
             function (time_js_46_1) {
@@ -75910,10 +75935,89 @@ System.register("render/mindfx", [], function (exports_204, context_204) {
         }
     };
 });
-System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"], function (exports_205, context_205) {
+System.register("world/edgeJester", ["world/brainrot", "world/jesterFire", "content/dialogues", "world/disc"], function (exports_205, context_205) {
+    "use strict";
+    var brainrot_js_1, jesterFire_js_2, dialogues_js_2, disc_js_58, MEET_AT, RESET_AT, IN, OUT, EJ, edgeJesterAt;
+    var __moduleName = context_205 && context_205.id;
+    function stepEdgeJester(player) {
+        const lvl = brainrot_js_1.getLevel();
+        if (lvl < RESET_AT && EJ.done && !EJ.phase)
+            EJ.done = false; // отпустило — в следующий раз встретит
+        if (EJ.phase === 'in') {
+            if (++EJ.t >= IN) {
+                EJ.phase = 'talk';
+                EJ.t = 0;
+                return { talk: { id: 'jester_edge', name: 'W', npc: 'jester', talkName: 'W', talkLines: dialogues_js_2.dialogues.jester_edge, x: EJ.at.x, y: EJ.at.y, w: 24, h: 46 } };
+            }
+            return null;
+        }
+        if (EJ.phase === 'talk') {
+            EJ.phase = 'out';
+            EJ.t = 0;
+            return null;
+        } // разговор закрыт — мир снова идёт
+        if (EJ.phase === 'out') {
+            if (++EJ.t >= OUT) {
+                EJ.phase = null;
+                EJ.at = null;
+            }
+            return null;
+        }
+        if (EJ.done || brainrot_js_1.inLoop() || !jesterFire_js_2.JF.outside || lvl < MEET_AT)
+            return null;
+        // впереди по пути — прочь от городка (туда, где край)
+        const cx = (disc_js_58.TOWN.x0 + disc_js_58.TOWN.x1) / 2, cy = (disc_js_58.TOWN.y0 + disc_js_58.TOWN.y1) / 2;
+        let ux = player.x - cx, uy = (player.y - cy) * 2;
+        const L = Math.hypot(ux, uy) || 1;
+        ux /= L;
+        uy /= L;
+        EJ.at = { x: Math.round(player.x + ux * 60), y: Math.round(player.y + uy * 34 - 22), dir: ux >= 0 ? 1 : -1 };
+        EJ.done = true;
+        EJ.phase = 'in';
+        EJ.t = 0;
+        return null;
+    }
+    exports_205("stepEdgeJester", stepEdgeJester);
+    function resetEdgeJester() { EJ.done = false; EJ.phase = null; EJ.at = null; EJ.t = 0; }
+    exports_205("resetEdgeJester", resetEdgeJester);
+    // прозрачность фигуры: проступает, стоит, пока говорит, отходит в сторону и гаснет
+    function edgeJesterAlpha() {
+        if (!EJ.phase)
+            return 0;
+        if (EJ.phase === 'in')
+            return EJ.t / IN;
+        if (EJ.phase === 'out')
+            return 1 - EJ.t / OUT;
+        return 1;
+    }
+    exports_205("edgeJesterAlpha", edgeJesterAlpha);
+    return {
+        setters: [
+            function (brainrot_js_1_1) {
+                brainrot_js_1 = brainrot_js_1_1;
+            },
+            function (jesterFire_js_2_1) {
+                jesterFire_js_2 = jesterFire_js_2_1;
+            },
+            function (dialogues_js_2_1) {
+                dialogues_js_2 = dialogues_js_2_1;
+            },
+            function (disc_js_58_1) {
+                disc_js_58 = disc_js_58_1;
+            }
+        ],
+        execute: function () {
+            exports_205("MEET_AT", MEET_AT = 80), exports_205("RESET_AT", RESET_AT = 30);
+            IN = 45, OUT = 120; // проступает три четверти секунды; уходит две
+            exports_205("EJ", EJ = { done: false, at: null, t: 0, phase: null });
+            exports_205("edgeJesterAt", edgeJesterAt = () => (EJ.at && EJ.phase ? { x: EJ.at.x + (EJ.phase === 'out' ? Math.round(EJ.at.dir * EJ.t * 0.25) : 0), y: EJ.at.y } : null));
+        }
+    };
+});
+System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"], function (exports_206, context_206) {
     "use strict";
     var dispatch_js_3, dispatch_scenes_js_2, el, hist, tail, lastTyped, esc, _stripHist;
-    var __moduleName = context_205 && context_205.id;
+    var __moduleName = context_206 && context_206.id;
     function initDispatchStrip(onSkip) {
         if (el || typeof document === 'undefined' || !document.body)
             return;
@@ -75926,7 +76030,7 @@ System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"
                 e.stopPropagation(); onSkip(); });
         document.body.appendChild(el);
     }
-    exports_205("initDispatchStrip", initDispatchStrip);
+    exports_206("initDispatchStrip", initDispatchStrip);
     // событие из stepDispatch / skipLine
     function dispatchEvent(ev, announce) {
         if (!ev)
@@ -75951,7 +76055,7 @@ System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"
         }
         render(true);
     }
-    exports_205("dispatchEvent", dispatchEvent);
+    exports_206("dispatchEvent", dispatchEvent);
     // каждый кадр: допечатывание терминала, хвост после конца сцены
     function stepDispatchStrip() {
         if (!el)
@@ -75967,7 +76071,7 @@ System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"
             render(false);
         }
     }
-    exports_205("stepDispatchStrip", stepDispatchStrip);
+    exports_206("stepDispatchStrip", stepDispatchStrip);
     function render() {
         if (!el)
             return;
@@ -75999,14 +76103,14 @@ System.register("ui/dispatchStrip", ["world/dispatch", "content/dispatch_scenes"
         execute: function () {
             el = null, hist = [], tail = 0, lastTyped = -1;
             esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            exports_205("_stripHist", _stripHist = () => hist.slice());
+            exports_206("_stripHist", _stripHist = () => hist.slice());
         }
     };
 });
-System.register("content/afisha", [], function (exports_206, context_206) {
+System.register("content/afisha", [], function (exports_207, context_207) {
     "use strict";
     var SHOWS;
-    var __moduleName = context_206 && context_206.id;
+    var __moduleName = context_207 && context_207.id;
     return {
         setters: [],
         execute: function () {
@@ -76016,14 +76120,14 @@ System.register("content/afisha", [], function (exports_206, context_206) {
             // помещается четыре-пять строк.
             // Пример: { date: '12.11', place: 'Москва · клуб «Х»' }
             // ═══════════════════════════════════════
-            exports_206("SHOWS", SHOWS = []);
+            exports_207("SHOWS", SHOWS = []);
         }
     };
 });
-System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context_207) {
+System.register("ui/titleglitch", ["core/prefs"], function (exports_208, context_208) {
     "use strict";
     var prefs_js_8, BO, AS, KV, FONT, LEFT_SKY, LEFT_GROUND, SKY_TO, RIGHT, RAMP_R, EDGE, EDGE_W, STRIPE, LEVELS, RASTER, RASTER_BAND, HOLD_A, HOLD_D, WIPE, RELOAD, cl, hitsKeep, lcg, span, snapC, midC, faces, smalls, smear, raf, layer;
-    var __moduleName = context_207 && context_207.id;
+    var __moduleName = context_208 && context_208.id;
     function hh(a, b, s) {
         let h = (a * 374761393 + b * 668265263 + s * 2246822519) | 0;
         h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -76049,7 +76153,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context
         const j = Math.floor(y / STRIPE), d = hh(j, 1, L.seed);
         return w + (d - 0.5) * 0.36 + (hh(j, 2, L.seed) < 0.12 ? 0.3 : 0); // полоса глубже или мельче соседних
     }
-    exports_207("weightAt", weightAt);
+    exports_208("weightAt", weightAt);
     // полоса сбоя на строках y..y+h: слева — от края до a, справа — от b до края (по весу,
     // у всех строк сразу — сорванная строка не заедет на щит)
     function band(L, y, h) {
@@ -76240,7 +76344,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context
         face(1, L, faceRaster);
         show(cv, 0);
     }
-    exports_207("bake", bake);
+    exports_208("bake", bake);
     function show(cv, i) {
         const g = cv.getContext('2d');
         g.save();
@@ -76255,7 +76359,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context
         if (layer)
             layer.getContext('2d').clearRect(0, 0, layer.width, layer.height);
     }
-    exports_207("stop", stop);
+    exports_208("stop", stop);
     function run(cv, over, L, shown) {
         stop();
         layer = over;
@@ -76384,7 +76488,7 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context
         };
         raf = requestAnimationFrame(frame);
     }
-    exports_207("run", run);
+    exports_208("run", run);
     return {
         setters: [
             function (prefs_js_8_1) {
@@ -76417,10 +76521,10 @@ System.register("ui/titleglitch", ["core/prefs"], function (exports_207, context
         }
     };
 });
-System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_208, context_208) {
+System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha", "ui/titleglitch"], function (exports_209, context_209) {
     "use strict";
     var loader_js_2, manifest_js_3, afisha_js_1, titleglitch_js_1, esc, entry, busy, shown, KEY;
-    var __moduleName = context_208 && context_208.id;
+    var __moduleName = context_209 && context_209.id;
     // щит: даты выступлений; нет их — «скоро»
     function fillAfisha(el) {
         if (!el)
@@ -76568,7 +76672,7 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
                 go();
         });
     }
-    exports_208("initTitle", initTitle);
+    exports_209("initTitle", initTitle);
     return {
         setters: [
             function (loader_js_2_1) {
@@ -76597,10 +76701,10 @@ System.register("ui/title", ["assets/loader", "assets/manifest", "content/afisha
         }
     };
 });
-System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "world/landforms", "world/lake", "world/boat", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "world/pithosLie", "world/climbOut", "render/mindfx", "world/dispatch", "world/thread", "world/folk", "world/jesterFire", "ui/dispatchStrip", "content/dispatch_scenes", "ui/title", "assets/loader"], function (exports_209, context_209) {
+System.register("main", ["render/scaler", "render/layers", "render/camera", "render/lighting", "render/postfx", "render/ink", "render/plate", "render/lofi", "world/toxic", "world/stumble", "world/gait", "core/prefs", "audio/geiger", "world/wind", "world/surface", "render/grass", "render/bunting", "render/moonthread", "render/haze", "render/shadows", "world/sky", "world/redNoon", "render/pen", "render/etch", "world/relief", "render/fireRing", "world/arteries", "render/arteryProps", "world/flora", "world/fields", "world/landmarks", "render/landmarkProps", "render/floraProps", "audio/windSound", "world/hang", "world/mechanisms", "render/draw", "world/terrain", "world/locations", "world/physics", "world/landforms", "world/lake", "world/boat", "core/state", "core/events", "core/input", "core/time", "sprites/player", "sprites/wardrobe", "world/garments", "render/context", "sprites/npcs/jester", "sprites/npcs/sol", "sprites/npcs/elder", "sprites/npcs/nocturnal", "sprites/npcs/dumpster", "sprites/locations/index", "ui/ui", "world/relook", "world/quietSound", "content/looks", "content/dialogues", "world/lore", "content/worldmap_db", "world/threads", "ui/askbox", "world/clauses", "render/weather", "ui/inventory", "core/save", "core/playerRef", "render/metaFx", "ui/lorepopup", "terminal/terminal", "ui/shop", "world/street", "ui/worldmap", "audio/audio", "world/beyond", "ui/editor", "sprites/eggObjects", "world/disc", "content/ulitsa_db", "render/ground", "render/things", "world/town", "render/townProps", "render/castle", "render/archlife", "render/archbake", "ui/stream", "render/archground", "render/archlights", "world/edges", "audio/zoneAmbient", "world/wandering", "world/inscriptions", "world/idle", "world/stage", "render/stage", "world/whisper", "world/heard", "render/particles", "render/puddles", "render/atmosphere", "ui/cursor", "world/pets", "world/ravens", "world/eyes", "world/silentCat", "core/sessionMemory", "world/useActions", "world/brainrot", "render/feedPanels", "world/feedPull", "world/placeStamp", "world/attention", "world/ending", "world/monsters", "world/potemkin", "world/opis", "render/quiet", "world/architecture", "world/underside", "world/mossway", "world/townWell", "render/underside", "content/underside", "net/net", "render/net", "world/names", "world/stands", "ui/netui", "world/house", "render/house", "render/wakefx", "world/pithosLie", "world/climbOut", "render/mindfx", "world/dispatch", "world/thread", "world/folk", "world/jesterFire", "world/edgeJester", "ui/dispatchStrip", "content/dispatch_scenes", "ui/title", "assets/loader"], function (exports_210, context_210) {
     "use strict";
-    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_28, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_18, redNoon_js_11, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_3, landforms_js_2, lake_js_10, boat_js_1, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_2, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_12, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_58, ulitsa_db_js_18, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_7, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_5, useActions_js_8, brainrot_js_1, feedPanels_js_1, feedPull_js_2, placeStamp_js_5, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_6, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, pithosLie_js_1, climbOut_js_1, mindfx_js_1, dispatch_js_4, thread_js_2, folk_js_3, jesterFire_js_2, jester_js_3, dispatchStrip_js_1, dispatch_scenes_js_3, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, boatTold, BOAT_LINES, pithosIn, pithosMenuWait, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, LANDMARKS, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, PERF, PF, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
-    var __moduleName = context_209 && context_209.id;
+    var scaler_js_27, layers_js_3, camera_js_1, lighting_js_1, postfx_js_1, ink_js_2, plate_js_3, lofi_js_1, toxic_js_2, stumble_js_1, gait_js_1, prefs_js_9, geiger_js_1, wind_js_28, surface_js_3, grass_js_2, bunting_js_1, moonthread_js_1, haze_js_3, shadows_js_1, sky_js_18, redNoon_js_11, pen_js_1, etch_js_1, relief_js_14, fireRing_js_1, arteries_js_13, arteryProps_js_1, flora_js_3, fields_js_6, landmarks_js_3, landmarkProps_js_1, floraProps_js_1, windSound_js_1, hang_js_13, mechanisms_js_6, draw_js_13, terrain_js_5, locations_js_6, physics_js_3, landforms_js_2, lake_js_10, boat_js_1, state_js_9, events_js_8, input_js_2, time_js_51, player_js_4, wardrobe_js_4, garments_js_2, context_js_20, jester_js_2, sol_js_1, elder_js_1, nocturnal_js_1, dumpster_js_1, locSprites, ui_js_2, relook_js_4, quietSound_js_1, looks_js_3, dialogues_js_3, lore_js_3, worldmap_db_js_2, threads_js_2, askbox_js_1, clauses_js_5, weather_js_3, redNoon_js_12, inventory_js_1, save_js_1, playerRef_js_8, metaFx_js_2, lorepopup_js_1, terminal_js_1, shop_js_1, street_js_3, worldmap_js_1, audio_js_13, beyond_js_2, editor_js_1, eggObjects_js_2, disc_js_59, ulitsa_db_js_18, ground_js_2, things_js_5, town_js_5, townProps_js_1, castle_js_1, archlife_js_1, archbake_js_1, stream_js_2, archground_js_1, archlights_js_1, edges_js_2, zoneAmbient_js_1, wandering_js_1, inscriptions_js_5, idle_js_2, stage_js_3, stage_js_4, whisper_js_7, heard_js_1, particles_js_3, puddles_js_1, atmosphere_js_1, weather_js_4, cursor_js_1, pets_js_1, ravens_js_2, eyes_js_2, silentCat_js_1, sessionMemory_js_5, useActions_js_8, brainrot_js_2, feedPanels_js_1, feedPull_js_2, placeStamp_js_5, attention_js_3, ending_js_1, monsters_js_1, potemkin_js_7, opis_js_2, quiet_js_1, architecture_js_2, underside_js_4, mossway_js_3, townWell_js_2, underside_js_5, underside_js_6, net_js_3, net_js_4, names_js_6, stands_js_4, netui_js_1, house_js_2, house_js_3, wakefx_js_1, pithosLie_js_1, climbOut_js_1, mindfx_js_1, dispatch_js_4, thread_js_2, folk_js_3, jesterFire_js_3, jester_js_3, edgeJester_js_1, dispatchStrip_js_1, dispatch_scenes_js_3, mainCanvas, grounded, prefs_js_10, audio_js_14, title_js_1, loader_js_3, player, flags, sessionAge, shiftCfg, savedData, wokeOnce, lockHintAt, FIRE, NO_HOUSE, houseKeep, boatTold, BOAT_LINES, pithosIn, pithosMenuWait, logSeated, stageKeep, stageQuiet, stageArmed, stageShut, stageEar, lookClick, time_js_52, FLAT, GROUND, INSIDE, insideHost, LIGHTS, casterOf, maskPass, heroCasters, LOW, FLATLM, warmSpots, fireLocS, npcDrawFn, jesterFirstTalk, NO_PLATE, NO_GRASS, NO_SHADOW, NO_CASTLE, stormTest, lookingAtWorld, GAZE_R, quietGazeId, LANDMARKS, DEBUG_HUD, lastCrackFrame, lastLightning, FADE_HALF, teleportFade, loopBand, surfaceLights, surfName, stumbling, fireLoc, STEP, SLACK, MAX_STEPS, lastNow, acc, PERF, PF, WAKE_FULL, WAKE_SHORT, wakeUp, entryDone, entryEnter, LOOK_PAUSE, STUCK_T, lookWait, stuckT, HAND, noonPaper, QUIET, quietHeard, quietLast, UNDER_PLACES, placeBelow, cap, SKY_TAG, WALK_GATES, DEV;
+    var __moduleName = context_210 && context_210.id;
     // клетка «кольцо:сторона» для плана местности; в городке, огне и за краем — нет
     function walkedKey(loc) { const p = placeStamp_js_5.placeOf(loc); return p && p.ring >= 1 && p.ring <= ulitsa_db_js_18.SEGMENTS.length ? ulitsa_db_js_18.SEGMENTS[p.ring - 1].id + ':' + p.side : null; }
     function applyByt() {
@@ -76612,7 +76716,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
     function saveData() {
         return {
             // из-под земли сохраняемся там, где спустился: заново спуститься — два шага
-            player: house_js_2.house.active ? house_js_2.doorOutside() : stage_js_3.stage.active ? { x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y } : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : climbOut_js_1.climb.on ? { x: climbOut_js_1.climb.end.x, y: climbOut_js_1.climb.end.y } : pithosLie_js_1.lie.on && pithosLie_js_1.lie.loc ? pithosLie_js_1.standOf(pithosLie_js_1.lie.loc) : boat_js_1.boat.ride && lake_js_10.PIERS[boat_js_1.boat.ride.from] ? { ...lake_js_10.PIERS[boat_js_1.boat.ride.from].stand } : { x: player.x, y: player.y }, off: disc_js_58.OFF, geo: disc_js_58.GEO,
+            player: house_js_2.house.active ? house_js_2.doorOutside() : stage_js_3.stage.active ? { x: stage_js_3.DOOR.x, y: stage_js_3.DOOR.y } : underside_js_4.under.active && underside_js_4.under.ret ? { x: underside_js_4.under.ret.x, y: underside_js_4.under.ret.y } : climbOut_js_1.climb.on ? { x: climbOut_js_1.climb.end.x, y: climbOut_js_1.climb.end.y } : pithosLie_js_1.lie.on && pithosLie_js_1.lie.loc ? pithosLie_js_1.standOf(pithosLie_js_1.lie.loc) : boat_js_1.boat.ride && lake_js_10.PIERS[boat_js_1.boat.ride.from] ? { ...lake_js_10.PIERS[boat_js_1.boat.ride.from].stand } : { x: player.x, y: player.y }, off: disc_js_59.OFF, geo: disc_js_59.GEO,
             talkedTo: Array.from(flags.talkedTo),
             clock: sky_js_18.worldClock(time_js_52.t),
             mail: threads_js_2.saveMail(),
@@ -76626,7 +76730,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             dispatch: dispatch_js_4.saveDispatch(),
             thread: thread_js_2.saveThread(),
             folk: folk_js_3.saveFolk(),
-            jesterFire: jesterFire_js_2.saveJesterFire(),
+            jesterFire: jesterFire_js_3.saveJesterFire(),
             heard: heard_js_1.saveHeard(),
             visited: Array.from(flags.visited),
             walked: Array.from(flags.walked),
@@ -77103,8 +77207,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         for (const p of lake_js_10.propsIn(camX, camY, camX + vw, camY + vh))
             drawList.push({ k: p.gy, prop: { draw: c => lake_js_10.drawProp(c, p, time_js_52.t) } }); // мусор, рыбацкое место, пар
-        if (jesterFire_js_2.FIRE && Math.abs(jesterFire_js_2.FIRE.x - camX - vw / 2) < vw && Math.abs(jesterFire_js_2.FIRE.y - camY - vh / 2) < vh + 80)
-            drawList.push({ k: jesterFire_js_2.FIRE.y + 40, prop: { draw: c => jesterFire_js_2.drawGateFire(c, time_js_52.t) } }); // огонь поперёк дороги у костра Шута
+        if (jesterFire_js_3.FIRE && Math.abs(jesterFire_js_3.FIRE.x - camX - vw / 2) < vw && Math.abs(jesterFire_js_3.FIRE.y - camY - vh / 2) < vh + 80)
+            drawList.push({ k: jesterFire_js_3.FIRE.y + 40, prop: { draw: c => jesterFire_js_3.drawGateFire(c, time_js_52.t) } }); // огонь поперёк дороги у костра Шута
+        {
+            const ea = edgeJester_js_1.edgeJesterAt();
+            if (ea)
+                drawList.push({ k: ea.y + 46, prop: { draw: c => { c.globalAlpha = edgeJester_js_1.edgeJesterAlpha(); jester_js_2.drawNPC_jester(ea.x, ea.y, { moving: false }); c.globalAlpha = 1; } } });
+        } // W перед падением
         drawList.sort((p, q) => p.k - q.k);
         for (const it of drawList) {
             if (it.bunting) {
@@ -77217,10 +77326,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // ── UI (normal blend): weather overlay + moss, then HUD on top ──
         if (!clauses_js_5.isOn('portik'))
             weather_js_4.drawOverlay(uiCtx);
-        brainrot_js_1.setClearings([...beyond_js_2.clearings(camX, camY), ...stands_js_4.standClearings(camX, camY, vw, vh)]); // кадр позёмки и вмятины — без растра распада
-        brainrot_js_1.dampBrainrot(beyond_js_2.beyond.hK); // горизонт виден — распад редеет
-        brainrot_js_1.draw(uiCtx);
-        if (!brainrot_js_1.isFrozen())
+        brainrot_js_2.setClearings([...beyond_js_2.clearings(camX, camY), ...stands_js_4.standClearings(camX, camY, vw, vh)]); // кадр позёмки и вмятины — без растра распада
+        brainrot_js_2.dampBrainrot(beyond_js_2.beyond.hK); // горизонт виден — распад редеет
+        brainrot_js_2.draw(uiCtx);
+        if (!brainrot_js_2.isFrozen())
             edges_js_2.drawHud(uiCtx); // батарейка у льда — поверх полос ленты; телефон погас — и её нет
         beyond_js_2.drawHorizon(uiCtx, vw, vh); // столб за кольцом: черта далеко впереди, над ней вечер
         metaFx_js_2.screenMoss.draw(uiCtx);
@@ -77244,7 +77353,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             st += weather_js_4.weather.intensity * (weather_js_4.weather.state === 'sandstorm' ? 0.9 : 0.6);
         if (seen && weather_js_4.weather.lightning > 28)
             st += 1;
-        if (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop())
+        if (brainrot_js_2.isFrozen() || brainrot_js_2.inLoop())
             st += 0.6;
         if (stormTest)
             st += 1;
@@ -77276,8 +77385,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // сцена Театра Теней: далеко ли от театра — новый ли приход (world/stage.js; сидят — в декорации)
         stage_js_3.stepStage(player.x + 6, player.y + 23, free, redNoon_js_11.redNoon.active);
         const camX = Math.round(camera_js_1.camera.x), camY = Math.round(camera_js_1.camera.y);
-        const ring = disc_js_58.ringAt(player.x + 6, player.y + 24);
-        wind_js_28.wind.update(weather_js_4.weather.state, weather_js_4.weather.intensity, ring, disc_js_58.inCore(player.x + 6, player.y + 24));
+        const ring = disc_js_59.ringAt(player.x + 6, player.y + 24);
+        wind_js_28.wind.update(weather_js_4.weather.state, weather_js_4.weather.intensity, ring, disc_js_59.inCore(player.x + 6, player.y + 24));
         windSound_js_1.updateWindSound(wind_js_28.wind.at(player.x + 6, player.y + 10).s * (1 - 0.8 * redNoon_js_11.redNoon.k) * (1 - 0.75 * beyond_js_2.beyond.hK)); // в полдень в ушах тихо; при горизонте — тоже
         grass_js_2.stepGrass(player);
         hang_js_13.stepHangs(player); // подвесы: колокола, вывески, плита на кране
@@ -77324,17 +77433,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // красный полдень: очень редкий, около полудня; юг (у него киноварь всегда) почти не видит его глазом
         redNoon_js_11.stepRedNoon(time_js_52.t, sky_js_18.phaseAt(time_js_52.t), sky_js_18.dayIndex(time_js_52.t));
         {
-            const sx = player.x + 6, sy = player.y + 24, ds = sy - disc_js_58.TOWN.y1;
-            const south = ds > 0 && ds >= Math.max(disc_js_58.TOWN.y0 - sy, disc_js_58.TOWN.x0 - sx, sx - disc_js_58.TOWN.x1);
+            const sx = player.x + 6, sy = player.y + 24, ds = sy - disc_js_59.TOWN.y1;
+            const south = ds > 0 && ds >= Math.max(disc_js_59.TOWN.y0 - sy, disc_js_59.TOWN.x0 - sx, sx - disc_js_59.TOWN.x1);
             ink_js_2.ink.noon(redNoon_js_11.redNoon.k * (south ? 0.25 : 1));
         }
         ink_js_2.ink.sky(true);
         ink_js_2.ink.beginFrame();
-        if (ring === disc_js_58.RINGS + 2)
+        if (ring === disc_js_59.RINGS + 2)
             ink_js_2.ink.want(0, 'за краем');
-        if (ring === disc_js_58.RINGS + 1)
+        if (ring === disc_js_59.RINGS + 1)
             ink_js_2.ink.want(3, 'кольцо огня');
-        if (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop())
+        if (brainrot_js_2.isFrozen() || brainrot_js_2.inLoop())
             ink_js_2.ink.want(3, 'брейнрот');
         if (jesterFirstTalk && !state_js_9.state.is('dialogue') && !state_js_9.state.is('menu'))
             jesterFirstTalk = false;
@@ -77371,10 +77480,10 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         const st = plateStorm();
         plate_js_3.plate.update(player.x + 6, player.y + 24, st);
         // токсичная окраина городка — фон для прибора; брейнрот — почти предел
-        const toxBase = (brainrot_js_1.isFrozen() || brainrot_js_1.inLoop()) ? 0.9 : zoneAmbient_js_1.getZone(player.x + 6, player.y + 24) === 'toxic' ? 0.18 : 0;
+        const toxBase = (brainrot_js_2.isFrozen() || brainrot_js_2.inLoop()) ? 0.9 : zoneAmbient_js_1.getZone(player.x + 6, player.y + 24) === 'toxic' ? 0.18 : 0;
         const tx = toxic_js_2.toxic.update(player.x + 6, player.y + 24, locations_js_6.locations, toxBase);
         geiger_js_1.updateGeiger(tx);
-        lofi_js_1.lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= disc_js_58.RINGS ? 0.25 : 0)));
+        lofi_js_1.lofi.update(Math.min(1, Math.max(st, tx * 0.6, ring >= 8 && ring <= disc_js_59.RINGS ? 0.25 : 0)));
         toxic_js_2.toxic.step(camX, camY, locations_js_6.locations, wind_js_28.wind);
         // частицы света, умирающие пиксели, мох по краям экрана
         if (lighting_js_1.lighting.sources[0]) {
@@ -78474,11 +78583,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // остановка, оборот к player.face, оступился — позой (sprites/player.js)
         gait_js_1.stepGait(player, { stepping: !player.still, surf: surfName, trip: house_js_2.house.active || underside_js_4.under.active ? null : stumble_js_1.stumble.pose(), reduced: prefs_js_9.reducedMotion() });
         // на сцене: всё, что перехватило клавиши (бумага, карта, опись), требует нового шага, чтобы встать
-        if (brainrot_js_1.isFrozen()) {
+        if (brainrot_js_2.isFrozen()) {
             if (stage_js_3.stage.active)
                 stageArmed = false;
             stopHero();
-            brainrot_js_1.update(player);
+            brainrot_js_2.update(player);
             return;
         }
         if (!state_js_9.state.is('game')) {
@@ -78651,11 +78760,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             const arriving = player.auto && !(player.path && player.path.length) && Math.hypot(player.tx - player.x, player.ty - player.y) < 10 + v2 / (2 * Math.max(0.005, S.decel));
             // стоит в чужой (или своей) вмятине — тянет, как стоящего спиной к краю; покой прежний (world/stands.js)
             const back = !steering && stands_js_4.standBack(player.x + 6, player.y + 23);
-            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_2.pullVector(player.x + 6, player.y + 23, brainrot_js_1.getLevel(), surface_js_3.WALK * S.max, dvx, dvy, back || player.head || player.face, brainrot_js_1.inLoop());
+            let [pdx, pdy] = arriving ? [0, 0] : feedPull_js_2.pullVector(player.x + 6, player.y + 23, brainrot_js_2.getLevel(), surface_js_3.WALK * S.max, dvx, dvy, back || player.head || player.face, brainrot_js_2.inLoop());
             // стоящего лента ползёт, пока покой не набрался: к пяти секундам — ни на точку (ревью 24.10:
             // иначе сидящий у картинки позёмки съезжал и падал)
             if (!steering) {
-                const c = Math.max(0, 1 - 2 * brainrot_js_1.calmOf());
+                const c = Math.max(0, 1 - 2 * brainrot_js_2.calmOf());
                 pdx *= c;
                 pdy *= c;
             }
@@ -78724,9 +78833,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             return;
         }
         // СКРОЛЛ: лента замкнута — кольцо девять повторяется по вертикали
-        if (brainrot_js_1.inLoop()) {
+        if (brainrot_js_2.inLoop()) {
             // петля — вокруг места входа (СКРОЛЛ стоит по своему месту клетки, не обязательно против городка)
-            const L0 = loopBand ? loopBand.y0 : disc_js_58.TOWN.y1 + disc_js_58.ringD(9, 24), L1 = loopBand ? loopBand.y1 : disc_js_58.TOWN.y1 + disc_js_58.ringD(9, 184);
+            const L0 = loopBand ? loopBand.y0 : disc_js_59.TOWN.y1 + disc_js_59.ringD(9, 24), L1 = loopBand ? loopBand.y1 : disc_js_59.TOWN.y1 + disc_js_59.ringD(9, 184);
             if (player.y > L1) {
                 player.y -= (L1 - L0);
                 player.ty = player.y;
@@ -78762,11 +78871,17 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         }
         // костёр Шута у кольца огня: огонь держит край; ночью — колпак над огнём (world/jesterFire.js)
         {
-            const jv = jesterFire_js_2.stepJesterFire(player, time_js_52.t, !player.moving);
+            const jv = jesterFire_js_3.stepJesterFire(player, time_js_52.t, !player.moving);
             if (jv && jv.hint)
                 idle_js_2.sayUnderfoot(jv.hint);
             if (jv && jv.bell)
                 audio_js_13.playTone(1318.5, 1.4, 'sine', 0.022);
+        }
+        // за огнём, незадолго до падения, — W ещё раз: пара шуток по существу (world/edgeJester.js)
+        {
+            const ej = edgeJester_js_1.stepEdgeJester(player);
+            if (ej && ej.talk)
+                ui_js_2.startDialogue(ej.talk);
         }
         // народ мира: постоял у таблички — голос говорит по фразе (world/folk.js)
         if (!redNoon_js_11.redNoon.active && !dispatch_js_4.isPlaying()) {
@@ -78787,9 +78902,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         // если бы до разговора с Шутом кто-то и оказался в пустыне — она для него ещё просто вечер
         if (canLeaveSettlement()) {
             edges_js_2.update(player);
-            brainrot_js_1.update(player);
+            brainrot_js_2.update(player);
             // «Стоянка на двоих»: простоял до покоя и шагнул назад — вмятина (calmOf только читается); легла — в сохранение
-            if (stands_js_4.stepStands(player.x + 6, player.y + 23, { active: !brainrot_js_1.isFrozen() && !brainrot_js_1.inLoop(), still: player.still === true, moving: player.moving === true, level: brainrot_js_1.getLevel(), calm: brainrot_js_1.calmOf() }))
+            if (stands_js_4.stepStands(player.x + 6, player.y + 23, { active: !brainrot_js_2.isFrozen() && !brainrot_js_2.inLoop(), still: player.still === true, moving: player.moving === true, level: brainrot_js_2.getLevel(), calm: brainrot_js_2.calmOf() }))
                 saveNow();
         }
         if (time_js_51.t % 30 === 0) {
@@ -78798,7 +78913,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 flags.walked.add(k);
             checkWalkGates();
             threads_js_2.stepMail(player.x + 6, player.y + 23);
-            opis_js_2.stepOpis(disc_js_58.ringAt(player.x + 6, player.y + 23));
+            opis_js_2.stepOpis(disc_js_59.ringAt(player.x + 6, player.y + 23));
         } // обмер — ногами; врата по пройденному; створка окна
         attention_js_3.stepAttention(player, locations_js_6.locations, player.still); // постоять у вещи — тоже внимание
         if (time_js_51.t % 15 === 0)
@@ -78806,7 +78921,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
         monsters_js_1.update(player);
         zoneAmbient_js_1.updateZone(zoneAmbient_js_1.getZone(player.x, player.y));
         if (!redNoon_js_11.redNoon.active)
-            idle_js_2.update(player.moving, disc_js_58.ringAt(player.x + 6, player.y + 24) >= disc_js_58.RINGS); // слова ленты — только у ленты
+            idle_js_2.update(player.moving, disc_js_59.ringAt(player.x + 6, player.y + 24) >= disc_js_59.RINGS); // слова ленты — только у ленты
         // канал «странник — терминал»: у поезда и у вехи (world/dispatch.js); сыграна сцена — сохранить
         {
             const ev = dispatch_js_4.stepDispatch({ x: player.x + 6, y: player.y + 23 }, locations_js_6.locations, worldmap_js_1.isOpen(), !player.moving && player.still !== false);
@@ -78822,13 +78937,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             }
         }
         dispatchStrip_js_1.stepDispatchStrip();
-        if (clauses_js_5.stepClauses(player, !redNoon_js_11.redNoon.active && !brainrot_js_1.inLoop()))
+        if (clauses_js_5.stepClauses(player, !redNoon_js_11.redNoon.active && !brainrot_js_2.inLoop()))
             saveNow(); // «Последний пункт»: строка на ходу; сказанная правда (жребий, погода) — сразу в сохранение
         whisper_js_7.check(player, locations_js_6.locations, sky_js_18.skyAt(sky_js_18.phaseAt(time_js_52.t)).moon > 0.5 ? litAt : null); // ночью — только у света
         particles_js_3.update();
         weather_js_4.update(zoneAmbient_js_1.getZone(player.x, player.y));
         updateCrackTriggers(player);
-        potemkin_js_7.update(player, locations_js_6.locations, brainrot_js_1.isFrozen());
+        potemkin_js_7.update(player, locations_js_6.locations, brainrot_js_2.isFrozen());
         if (time_js_52.t % 3 === 0 && FIRE)
             particles_js_3.fireEmber(FIRE.x + 25, FIRE.y + 15);
     }
@@ -79329,8 +79444,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (looks_js_3_1) {
                 looks_js_3 = looks_js_3_1;
             },
-            function (dialogues_js_2_1) {
-                dialogues_js_2 = dialogues_js_2_1;
+            function (dialogues_js_3_1) {
+                dialogues_js_3 = dialogues_js_3_1;
             },
             function (lore_js_3_1) {
                 lore_js_3 = lore_js_3_1;
@@ -79391,8 +79506,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (eggObjects_js_2_1) {
                 eggObjects_js_2 = eggObjects_js_2_1;
             },
-            function (disc_js_58_1) {
-                disc_js_58 = disc_js_58_1;
+            function (disc_js_59_1) {
+                disc_js_59 = disc_js_59_1;
             },
             function (ulitsa_db_js_18_1) {
                 ulitsa_db_js_18 = ulitsa_db_js_18_1;
@@ -79484,8 +79599,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (useActions_js_8_1) {
                 useActions_js_8 = useActions_js_8_1;
             },
-            function (brainrot_js_1_1) {
-                brainrot_js_1 = brainrot_js_1_1;
+            function (brainrot_js_2_1) {
+                brainrot_js_2 = brainrot_js_2_1;
             },
             function (feedPanels_js_1_1) {
                 feedPanels_js_1 = feedPanels_js_1_1;
@@ -79574,8 +79689,11 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             function (folk_js_3_1) {
                 folk_js_3 = folk_js_3_1;
             },
-            function (jesterFire_js_2_1) {
-                jesterFire_js_2 = jesterFire_js_2_1;
+            function (jesterFire_js_3_1) {
+                jesterFire_js_3 = jesterFire_js_3_1;
+            },
+            function (edgeJester_js_1_1) {
+                edgeJester_js_1 = edgeJester_js_1_1;
             },
             function (dispatchStrip_js_1_1) {
                 dispatchStrip_js_1 = dispatchStrip_js_1_1;
@@ -79598,7 +79716,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             pen_js_1.installPen(layers_js_3.layers.ctx('bg')); // перо: толщина штриха — по нажиму суток
             layers_js_3.layers.wakePass = (ctx, main) => wakefx_js_1.wakePass(ctx, main, scaler_js_27.scaler.scale); // пробуждение в мире цифры
             input_js_2.input.init(mainCanvas);
-            locations_js_6.attachContent(looks_js_3.looks, dialogues_js_2.dialogues);
+            locations_js_6.attachContent(looks_js_3.looks, dialogues_js_3.dialogues);
             house_js_2.buildHouse(locations_js_6.locations); // дом пробуждения — в центре старого города (квартал); дороги и фундаменты его обходят
             archground_js_1.prepareArchGround(locations_js_6.archEnsembles, locations_js_6.locations); // земля под постройками эпох
             // артерии — дороги, река, дуги, линия неба — в обход построек, дворов, табличек и утвари
@@ -79613,8 +79731,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             town_js_5.buildTown(); // городок по канону: высохшее русло через посёлок, мост над ним
             relief_js_14.setReliefCarve((x, y) => arteries_js_13.riverCarve(x, y) + landforms_js_2.landCarve(x, y)); // река промыла себе долину; горы, каньоны и чаша пруда (world/landforms.js)
             // в глубокую воду озера не войти — только лодкой; наружу через огонь края — только у костра Шута, когда огонь лёг
-            physics_js_3.setTerrainBlock((x, y) => lake_js_10.deepAt(x, y) || jesterFire_js_2.fireBlocked(x, y, time_js_52.t));
-            jester_js_3.setCapOff(jesterFire_js_2.capOff); // ночью у огня W греет колпак — на голове его нет
+            physics_js_3.setTerrainBlock((x, y) => lake_js_10.deepAt(x, y) || jesterFire_js_3.fireBlocked(x, y, time_js_52.t));
+            jester_js_3.setCapOff(jesterFire_js_3.capOff); // ночью у огня W греет колпак — на голове его нет
             relief_js_14.setReliefFlats(archground_js_1.archGroundRects()); // под дворами и водой земля выровнена
             arteryProps_js_1.buildArteryProps(); // поднятое: акведуки, аркады, ЛЭП, эстакада, мосты
             fields_js_6.buildFields(archground_js_1.archGroundRects()); // поля у дворов и вдоль дорог — бороздами в землю
@@ -79656,7 +79774,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             loader_js_3.preloadAll();
             // ═══ GAME OBJECTS (must be before loadGame!) ═══
             player = {
-                x: disc_js_58.CORE.x, y: disc_js_58.CORE.y, tx: disc_js_58.CORE.x, ty: disc_js_58.CORE.y,
+                x: disc_js_59.CORE.x, y: disc_js_59.CORE.y, tx: disc_js_59.CORE.x, ty: disc_js_59.CORE.y,
                 dir: 1, moving: false, walkFrame: 0,
                 still: true, // не ведут ни клавиши, ни палец, ни автоход (снос лентой — не ходьба)
                 vx: 0, vy: 0, // скорость: догоняет желаемую с инерцией поверхности
@@ -79686,13 +79804,13 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (savedData.player) {
                     // кольца стали просторнее (geo 2): прежнее место — по долям колец, городок от угла;
                     // а поля мира могли стать шире — сдвиг по разнице отступов (старые сейвы — 2300)
-                    if (savedData.geo === disc_js_58.GEO) {
-                        const dOff = disc_js_58.OFF - (savedData.off || disc_js_58.OFF);
+                    if (savedData.geo === disc_js_59.GEO) {
+                        const dOff = disc_js_59.OFF - (savedData.off || disc_js_59.OFF);
                         player.x = savedData.player.x + dOff;
                         player.y = savedData.player.y + dOff;
                     }
                     else {
-                        const p = disc_js_58.fromOldGeo(savedData.player.x, savedData.player.y, savedData.off || 2300);
+                        const p = disc_js_59.fromOldGeo(savedData.player.x, savedData.player.y, savedData.off || 2300);
                         player.x = p.x;
                         player.y = p.y;
                     }
@@ -79746,7 +79864,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 stage_js_3.loadStage(savedData.stage); // сцена Театра Теней: номер прихода, пулы (world/stage.js)
                 thread_js_2.loadThread(savedData.thread);
                 folk_js_3.loadFolk(savedData.folk);
-                jesterFire_js_2.loadJesterFire(savedData.jesterFire); // костёр Шута: отказ и проход на вечер, партии, «Не смей» — однажды                                   // народ мира: сказанное однажды (ночной у врат)                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
+                jesterFire_js_3.loadJesterFire(savedData.jesterFire); // костёр Шута: отказ и проход на вечер, партии, «Не смей» — однажды                                   // народ мира: сказанное однажды (ночной у врат)                               // нить «куда дальше»: записки из следующего кольца, вторая встреча
                 dispatch_js_4.loadDispatch(savedData.dispatch); // канал машиниста: сыгранные сцены «Ничего» и «Заочно»
                 heard_js_1.loadHeard(savedData.heard); // что странник носит при себе — мысли на сцене (world/heard.js)
                 // сохранение до имён по знакомству: в строках описи от руки — имя, которого ещё не слышал
@@ -79759,8 +79877,8 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // без пропуска Шута — только в городке: старое сохранение (до замка) или тестовый адрес
             // без дома (?nohouse, ?under) не начинают странствие за изгородью (сверка обходов, 24.10)
             if (!canLeaveSettlement() && !physics_js_3.isInSettlement(player.x, player.y)) {
-                player.x = player.tx = disc_js_58.CORE.x;
-                player.y = player.ty = disc_js_58.CORE.y;
+                player.x = player.tx = disc_js_59.CORE.x;
+                player.y = player.ty = disc_js_59.CORE.y;
             }
             // старые сохранения: клетки, где что-то осмотрено, — тоже пройдены
             for (const loc of locations_js_6.locations)
@@ -79795,9 +79913,9 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // ═══ LIGHTING SETUP from locations ═══
             lighting_js_1.lighting.clear();
             // Player lantern — follows player
-            lighting_js_1.lighting.add({ x: disc_js_58.CORE.x, y: disc_js_58.CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
+            lighting_js_1.lighting.add({ x: disc_js_59.CORE.x, y: disc_js_59.CORE.y, r: 55, color: [255, 180, 80], flicker: 0.1 });
             // ночное зрение (ROADMAP Г2): вокруг странника — мягкий ореол цвета кости, без середины; растёт с темнотой
-            lighting_js_1.lighting.add({ x: disc_js_58.CORE.x, y: disc_js_58.CORE.y, r: 150, color: [217, 207, 184], flicker: 0, soft: true, intensity: 0 });
+            lighting_js_1.lighting.add({ x: disc_js_59.CORE.x, y: disc_js_59.CORE.y, r: 150, color: [217, 207, 184], flicker: 0, soft: true, intensity: 0 });
             // Location lights
             for (const loc of locations_js_6.locations) {
                 if (!loc.light || loc.quiet)
@@ -79901,7 +80019,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // полосы ленты (render/feedPanels.js) — в сборке до печати: зерно, яд, заливки и интерфейс ложатся поверх,
             // растр распада (слой ui) ест и ленту; в красный полдень, дома и под землёй лент нет
             layers_js_3.layers.feedPass = ctx => {
-                const k = brainrot_js_1.feedK(), off = k <= 0 || redNoon_js_11.redNoon.k > 0.5 || house_js_2.house.active || underside_js_4.under.active || stage_js_3.stage.active;
+                const k = brainrot_js_2.feedK(), off = k <= 0 || redNoon_js_11.redNoon.k > 0.5 || house_js_2.house.active || underside_js_4.under.active || stage_js_3.stage.active;
                 ctx.save();
                 ctx.setTransform(scaler_js_27.scaler.scale, 0, 0, scaler_js_27.scaler.scale, 0, 0);
                 ctx.imageSmoothingEnabled = false;
@@ -80029,7 +80147,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             // упал за краем — проснулся дома: на краю кровати, ботинки у порога (канон: «пробуждение дома»)
             // пробуждение — без текста, но со следами падения (слово автора 28.10): строка внизу уходит,
             // трещины экрана остаются (render/metaFx.js); подписи падения в доме нет — оверлей там не рисуется
-            events_js_8.events.on('brainrot.recover', () => { sessionMemory_js_5.markReturned(); lorepopup_js_1.dismiss(); if (NO_HOUSE)
+            events_js_8.events.on('brainrot.recover', () => { edgeJester_js_1.resetEdgeJester(); sessionMemory_js_5.markReturned(); lorepopup_js_1.dismiss(); if (NO_HOUSE)
                 return; intoHouse(house_js_2.WAKE.x, house_js_2.WAKE.y, true); wakeFx(); });
             entryDone = false;
             { // оттиск сборки на заставке — сверка «что реально задеплоено»
@@ -80205,7 +80323,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             } });
             // что странник носит при себе (world/heard.js): шёпот места начался рядом, надпись проступила при нём
             {
-                const ringOfLoc = loc => { const p = placeStamp_js_5.placeOf(loc); return p && p.ring >= 0 && p.ring <= disc_js_58.RINGS ? p.ring : 0; };
+                const ringOfLoc = loc => { const p = placeStamp_js_5.placeOf(loc); return p && p.ring >= 0 && p.ring <= disc_js_59.RINGS ? p.ring : 0; };
                 whisper_js_7.setHeardHook((kind, id, loc) => heard_js_1.noteHeard(kind, id, ringOfLoc(loc)));
                 inscriptions_js_5.setRevealHook((kind, id, loc) => heard_js_1.noteHeard(kind, id, ringOfLoc(loc)));
             }
@@ -80218,7 +80336,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
             events_js_8.events.on('brainrot.freeze', attention_js_3.forget);
             // упал за огнём: от тебя остаётся цепочка, конец съеден растром (world/stands.js); своё — в базу, если сеть есть.
             // Сохранится уже дома: сохранение посреди падения вернуло бы странника на край
-            events_js_8.events.on('brainrot.freeze', () => { if (!brainrot_js_1.inLoop())
+            events_js_8.events.on('brainrot.freeze', () => { if (!brainrot_js_2.inLoop())
                 stands_js_4.onStandFall(player.x + 6, player.y + 23); });
             stands_js_4.setStandNet({ leave: net_js_3.netLeaveStand, fall: net_js_3.netStandFall });
             potemkin_js_7.setRelook(loc => relook_js_4.relookText(loc.id, lookTags()));
@@ -80273,7 +80391,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 }
                 // цель — южная тропа кольца врат
                 const seg = gateRing(gate);
-                const p = disc_js_58.trailPoint('south', disc_js_58.ringD(Math.max(1, seg.n), 100));
+                const p = disc_js_59.trailPoint('south', disc_js_59.ringD(Math.max(1, seg.n), 100));
                 teleportWithFade(p.x, p.y);
             });
             events_js_8.events.on(events_js_8.E.LORE_COLLECT, (item) => {
@@ -80291,7 +80409,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                 if (!a)
                     return;
                 if (a.key === 'fire_play' || a.key === 'fire_move') {
-                    ui_js_2.showLook({ name: 'У огня', look: a.key === 'fire_play' ? jesterFire_js_2.deal(time_js_52.t) : jesterFire_js_2.move(time_js_52.t) });
+                    ui_js_2.showLook({ name: 'У огня', look: a.key === 'fire_play' ? jesterFire_js_3.deal(time_js_52.t) : jesterFire_js_3.move(time_js_52.t) });
                     saveNow();
                     return;
                 } // партия у костра Шута
@@ -80366,7 +80484,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                     return;
                 }
                 if (actionKey === 'fire_ask' || actionKey === 'fire_yield') {
-                    ui_js_2.showLook({ name: 'У огня', look: actionKey === 'fire_ask' ? jesterFire_js_2.ask(time_js_52.t) : jesterFire_js_2.yieldCard(time_js_52.t) });
+                    ui_js_2.showLook({ name: 'У огня', look: actionKey === 'fire_ask' ? jesterFire_js_3.ask(time_js_52.t) : jesterFire_js_3.yieldCard(time_js_52.t) });
                     saveNow();
                     return;
                 } // костёр Шута: просить — отказ на вечер; поддаться — «Не смей»
@@ -80482,7 +80600,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                         lockHint();
                         return;
                     } // за изгородь — только с пропуском Шута
-                    teleportWithFade(disc_js_58.TOWN.x1 + disc_js_58.ringD(2, 96), street_js_3.BRANCH_PLAIN.y0 + 80 * disc_js_58.TS);
+                    teleportWithFade(disc_js_59.TOWN.x1 + disc_js_59.ringD(2, 96), street_js_3.BRANCH_PLAIN.y0 + 80 * disc_js_59.TS);
                     return;
                 }
                 // цели переходов — у своих табличек (места колец стоят по истории, world/sites.js): к вехе
@@ -80492,7 +80610,7 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                         lockHint();
                         return;
                     } // за изгородь — только с пропуском Шута
-                    const to = frontOf(locations_js_6.locations.find(l => l.useAction === 'branch_plain'), { x: disc_js_58.TOWN.x0 + 2560 * disc_js_58.TS, y: disc_js_58.TOWN.y1 + disc_js_58.ringD(2, 80) });
+                    const to = frontOf(locations_js_6.locations.find(l => l.useAction === 'branch_plain'), { x: disc_js_59.TOWN.x0 + 2560 * disc_js_59.TS, y: disc_js_59.TOWN.y1 + disc_js_59.ringD(2, 80) });
                     teleportWithFade(to.x, to.y);
                     return;
                 }
@@ -80501,12 +80619,12 @@ System.register("main", ["render/scaler", "render/layers", "render/camera", "ren
                         lockHint();
                         return;
                     } // за изгородь — только с пропуском Шута
-                    const to = frontOf(loc, { x: disc_js_58.TOWN.x0 + 2540 * disc_js_58.TS, y: disc_js_58.TOWN.y1 + disc_js_58.ringD(9, 90) });
-                    const side = loc.streetSide && loc.streetSide !== 'plain' ? loc.streetSide : 'south', back = disc_js_58.trailPoint(side, disc_js_58.ringD(8, 100));
-                    const B = disc_js_58.loopBandAt(to.x + 6, to.y + 23); // по ногам; петля — в своём кольце
+                    const to = frontOf(loc, { x: disc_js_59.TOWN.x0 + 2540 * disc_js_59.TS, y: disc_js_59.TOWN.y1 + disc_js_59.ringD(9, 90) });
+                    const side = loc.streetSide && loc.streetSide !== 'plain' ? loc.streetSide : 'south', back = disc_js_59.trailPoint(side, disc_js_59.ringD(8, 100));
+                    const B = disc_js_59.loopBandAt(to.x + 6, to.y + 23); // по ногам; петля — в своём кольце
                     loopBand = { y0: B.y0 - 23, y1: B.y1 - 23 };
                     teleportWithFade(to.x, to.y, () => {
-                        brainrot_js_1.enterLoop(() => {
+                        brainrot_js_2.enterLoop(() => {
                             teleportWithFade(back.x, back.y, () => {
                                 lorepopup_js_1.showLore('Лента продолжает без тебя. Ничего не потеряно: терять было нечего.');
                             });
